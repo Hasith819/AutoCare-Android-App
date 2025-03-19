@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <dimen name="splash_text_size">40sp</dimen>
     <dimen name="default_padding">16dp</dimen>
     <dimen name="default_margin">16dp</dimen>
-
 </resources>
