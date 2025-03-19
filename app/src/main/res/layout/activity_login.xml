@@ -20,10 +20,10 @@
         android:layout_marginBottom="@dimen/default_margin"/>
 
     <EditText
-        android:id="@+id/etUsername"
+        android:id="@+id/etEmail"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Username"
+        android:hint="Email"
         android:padding="@dimen/default_padding"
         android:background="@drawable/edit_text_background"
         android:layout_marginBottom="@dimen/default_margin"/>
