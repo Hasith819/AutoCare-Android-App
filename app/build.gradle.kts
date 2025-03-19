@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace = "com.nibm.autocare"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.nibm.autocare"
