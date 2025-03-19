@@ -7,13 +7,13 @@
     android:orientation="vertical"
     android:padding="@dimen/default_padding"
     android:gravity="center"
-    tools:context=".Authentication.LoginActivity">
+    tools:context=".Authentication.RegisterActivity">
 
     <TextView
-        android:id="@+id/tvWelcome"
+        android:id="@+id/tvRegisterTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Welcome to AutoCare"
+        android:text="Register"
         android:textColor="@color/purple_500"
         android:textSize="@dimen/splash_text_size"
         android:textStyle="bold"
@@ -29,6 +29,16 @@
         android:layout_marginBottom="@dimen/default_margin"/>
 
     <EditText
+        android:id="@+id/etEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Email"
+        android:padding="@dimen/default_padding"
+        android:background="@drawable/edit_text_background"
+        android:inputType="textEmailAddress"
+        android:layout_marginBottom="@dimen/default_margin"/>
+
+    <EditText
         android:id="@+id/etPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -38,30 +48,21 @@
         android:inputType="textPassword"
         android:layout_marginBottom="@dimen/default_margin"/>
 
-    <TextView
-        android:id="@+id/tvForgotPassword"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:text="Forgot Password"
-        android:textColor="@color/teal_700"
-        android:layout_marginBottom="@dimen/default_margin"/>
-
     <Button
-        android:id="@+id/btnLogin"
+        android:id="@+id/btnRegister"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Login"
+        android:text="Register"
         android:backgroundTint="@color/purple_500"
         android:textColor="@color/white"
         android:padding="@dimen/default_padding"
         android:layout_marginBottom="@dimen/default_margin"/>
 
     <TextView
-        android:id="@+id/tvRegister"
+        android:id="@+id/tvLogin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Don't have an account? Register"
+        android:text="Already have an account? Login"
         android:textColor="@color/teal_700"
         android:layout_marginTop="@dimen/default_margin"/>
 </LinearLayout>
