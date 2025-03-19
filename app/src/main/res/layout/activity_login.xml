@@ -11,8 +11,7 @@
         android:layout_width="150dp"
         android:layout_height="150dp"
         android:layout_centerHorizontal="true"
-        android:layout_marginTop="50dp"
-        android:src="@drawable/ic_logo" />
+        android:layout_marginTop="50dp"/>
 
     <EditText
         android:id="@+id/username"
@@ -24,7 +23,6 @@
         android:layout_marginEnd="30dp"
         android:hint="Username"
         android:padding="15dp"
-        android:background="@drawable/edit_text_background"
         android:inputType="text" />
 
     <EditText
@@ -37,7 +35,6 @@
         android:layout_marginEnd="30dp"
         android:hint="Password"
         android:padding="15dp"
-        android:background="@drawable/edit_text_background"
         android:inputType="textPassword" />
 
     <Button
@@ -48,7 +45,6 @@
         android:layout_marginTop="30dp"
         android:layout_marginStart="30dp"
         android:layout_marginEnd="30dp"
-        android:background="@color/button_color"
         android:text="Login"
         android:textColor="@android:color/white"
         android:padding="15dp" />
@@ -61,7 +57,6 @@
         android:layout_centerHorizontal="true"
         android:layout_marginTop="20dp"
         android:text="Don't have an account? Register"
-        android:textColor="@color/link_color"
         android:textSize="14sp" />
 
 </RelativeLayout>
