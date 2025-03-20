@@ -15,14 +15,10 @@
         android:theme="@style/Theme.AutoCare"
         tools:targetApi="31">
         <activity
-            android:name=".test.TestActivity"
+            android:name=".TestActivity"
             android:exported="false" />
         <activity
             android:name=".Authentication.NewPasswordActivity"
-            android:exported="false"
-            android:screenOrientation="portrait" />
-        <activity
-            android:name=".Authentication.VerificationActivity"
             android:exported="false"
             android:screenOrientation="portrait" />
         <activity

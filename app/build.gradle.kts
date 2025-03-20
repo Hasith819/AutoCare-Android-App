@@ -44,6 +44,7 @@ dependencies {
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.firebase.database.ktx)
+    implementation(libs.firebase.functions.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -52,7 +53,9 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation ("com.google.firebase:firebase-auth")
 
-    implementation ("com.google.firebase:firebase-database-ktx:20.3.0")
+   implementation ("com.google.firebase:firebase-database-ktx:20.3.0")
+
+    implementation ("com.google.firebase:firebase-functions-ktx")
 
 
 }

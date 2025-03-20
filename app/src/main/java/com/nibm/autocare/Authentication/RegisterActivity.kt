@@ -2,7 +2,6 @@ package com.nibm.autocare.Authentication
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
@@ -17,76 +16,59 @@ class RegisterActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
     private lateinit var database: DatabaseReference
+    private lateinit var etUsername: EditText
+    private lateinit var etEmail: EditText
+    private lateinit var etPassword: EditText
+    private lateinit var btnRegister: Button
+    private lateinit var tvLogin: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_register)
 
-        // Initialize Firebase Auth and Database
         auth = FirebaseAuth.getInstance()
-        database = FirebaseDatabase.getInstance().reference.child("users")
+        database = FirebaseDatabase.getInstance().reference
 
-        // Back to Login
-        val backToSignInTextView = findViewById<TextView>(R.id.tvLogin)
-        backToSignInTextView.setOnClickListener {
-            val intent = Intent(this, LoginActivity::class.java)
-            startActivity(intent)
+        etUsername = findViewById(R.id.etUsername)
+        etEmail = findViewById(R.id.etEmail)
+        etPassword = findViewById(R.id.etPassword)
+        btnRegister = findViewById(R.id.btnRegister)
+        tvLogin = findViewById(R.id.tvLogin)
+
+        btnRegister.setOnClickListener {
+            val username = etUsername.text.toString().trim()
+            val email = etEmail.text.toString().trim()
+            val password = etPassword.text.toString().trim()
+
+            if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
+                Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
+            } else {
+                registerUser(username, email, password)
+            }
         }
 
-        // Register Button
-        val btnRegister = findViewById<Button>(R.id.btnRegister)
-        btnRegister.setOnClickListener {
-            registerUser()
+        tvLogin.setOnClickListener {
+            startActivity(Intent(this, LoginActivity::class.java))
         }
     }
 
-    private fun registerUser() {
-        val etUsername = findViewById<EditText>(R.id.etUsername)
-        val etEmail = findViewById<EditText>(R.id.etEmail)
-        val etPassword = findViewById<EditText>(R.id.etPassword)
-
-        val username = etUsername.text.toString().trim()
-        val email = etEmail.text.toString().trim()
-        val password = etPassword.text.toString().trim()
-
-        if (username.isEmpty() || email.isEmpty() || password.isEmpty()) {
-            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // Create user with Firebase Auth
+    private fun registerUser(username: String, email: String, password: String) {
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    // Registration successful
                     val user = auth.currentUser
-                    if (user != null) {
-                        // Save additional user data in Realtime Database
-                        val newUser = User(username, email)
-                        database.child(user.uid).setValue(newUser)
-                            .addOnSuccessListener {
-                                Toast.makeText(this, "Registration successful!", Toast.LENGTH_SHORT).show()
-                                // Redirect to Login or another activity
-                                val intent = Intent(this, LoginActivity::class.java)
-                                startActivity(intent)
-                                finish()
-                            }
-                            .addOnFailureListener { e ->
-                                Log.e("Register", "Failed to save user data", e)
-                                Toast.makeText(this, "Failed to save user data", Toast.LENGTH_SHORT).show()
-                            }
-                    }
+                    val userId = user?.uid ?: ""
+                    val userMap = mapOf("username" to username, "email" to email)
+
+                    database.child("users").child(userId).setValue(userMap)
+                        .addOnCompleteListener {
+                            Toast.makeText(this, "Registration successful", Toast.LENGTH_SHORT).show()
+                            startActivity(Intent(this, LoginActivity::class.java))
+                            finish()
+                        }
                 } else {
-                    // Registration failed
-                    Log.e("Register", "Registration Failed", task.exception)
                     Toast.makeText(this, "Registration failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                 }
             }
     }
 }
-
-// User data class
-data class User(
-    val username: String = "",
-    val email: String = ""
-)

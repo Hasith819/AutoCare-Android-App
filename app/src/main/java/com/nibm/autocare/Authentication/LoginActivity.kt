@@ -9,63 +9,60 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.nibm.autocare.R
-import com.nibm.autocare.test.TestActivity
+import com.nibm.autocare.TestActivity
 
 class LoginActivity : AppCompatActivity() {
 
     private lateinit var auth: FirebaseAuth
+    private lateinit var etEmail: EditText
+    private lateinit var etPassword: EditText
+    private lateinit var btnLogin: Button
+    private lateinit var tvForgotPassword: TextView
+    private lateinit var tvRegister: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        // Initialize Firebase Auth
         auth = FirebaseAuth.getInstance()
 
-        // Views
-        val etEmail = findViewById<EditText>(R.id.etEmail)
-        val etPassword = findViewById<EditText>(R.id.etPassword)
-        val btnLogin = findViewById<Button>(R.id.btnLogin)
-        val forgotPasswordTextView = findViewById<TextView>(R.id.tvForgotPassword)
-        val registerTextView = findViewById<TextView>(R.id.tvRegister)
+        etEmail = findViewById(R.id.etEmail)
+        etPassword = findViewById(R.id.etPassword)
+        btnLogin = findViewById(R.id.btnLogin)
+        tvForgotPassword = findViewById(R.id.tvForgotPassword)
+        tvRegister = findViewById(R.id.tvRegister)
 
-        // Login Button Click Listener
         btnLogin.setOnClickListener {
             val email = etEmail.text.toString().trim()
             val password = etPassword.text.toString().trim()
 
             if (email.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+            } else {
+                loginUser(email, password)
             }
+        }
 
-            // Sign in with Firebase Authentication
-            auth.signInWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this) { task ->
-                    if (task.isSuccessful) {
-                        // Login success
-                        Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show()
-                        // Navigate to Main Activity (or any other activity)
-                        val intent = Intent(this, TestActivity::class.java)
-                        startActivity(intent)
-                        finish()
-                    } else {
-                        // Login failed
-                        Toast.makeText(this, "Login failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
-                    }
+        tvForgotPassword.setOnClickListener {
+            startActivity(Intent(this, ForgotPasswordActivity::class.java))
+        }
+
+        tvRegister.setOnClickListener {
+            startActivity(Intent(this, RegisterActivity::class.java))
+        }
+    }
+
+    private fun loginUser(email: String, password: String) {
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
+                    // Redirect to MainActivity or another screen
+                    startActivity(Intent(this, TestActivity::class.java))
+                    finish()
+                } else {
+                    Toast.makeText(this, "Login failed: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
                 }
-        }
-
-        // Forgot Password Click Listener
-        forgotPasswordTextView.setOnClickListener {
-            val intent = Intent(this, ForgotPasswordActivity::class.java)
-            startActivity(intent)
-        }
-
-        // Register Click Listener
-        registerTextView.setOnClickListener {
-            val intent = Intent(this, RegisterActivity::class.java)
-            startActivity(intent)
-        }
+            }
     }
 }
