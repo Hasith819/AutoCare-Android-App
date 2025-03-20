@@ -34,8 +34,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Verify"
-        android:backgroundTint="@color/purple_500"
-        android:textColor="@color/white"
+        android:backgroundTint="@color/black"
+        android:textColor="@color/yellow"
         android:padding="@dimen/default_padding"
         android:layout_marginBottom="@dimen/default_margin"/>
 
@@ -44,6 +44,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Didn't receive a code? Resend"
-        android:textColor="@color/teal_700"
+        android:textColor="@color/purple_700"
         android:layout_marginTop="@dimen/default_margin"/>
 </LinearLayout>

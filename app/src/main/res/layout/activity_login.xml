@@ -44,7 +44,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="end"
         android:text="Forgot Password"
-        android:textColor="@color/teal_700"
+        android:textColor="@color/purple_700"
         android:layout_marginBottom="@dimen/default_margin"/>
 
     <Button
@@ -52,8 +52,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Login"
-        android:backgroundTint="@color/purple_500"
-        android:textColor="@color/white"
+        android:backgroundTint="@color/black"
+        android:textColor="@color/yellow"
         android:padding="@dimen/default_padding"
         android:layout_marginBottom="@dimen/default_margin"/>
 
@@ -62,6 +62,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Don't have an account? Register"
-        android:textColor="@color/teal_700"
+        android:textColor="@color/purple_700"
         android:layout_marginTop="@dimen/default_margin"/>
 </LinearLayout>
