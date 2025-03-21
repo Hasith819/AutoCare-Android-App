@@ -54,7 +54,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Select from Gallery"
+            android:text="Gallery"
             android:backgroundTint="@color/black"
             android:textColor="@color/yellow"
             android:layout_marginEnd="8dp" />
@@ -65,7 +65,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Take a Picture"
+            android:text="Camera"
             android:backgroundTint="@color/black"
             android:textColor="@color/yellow" />
     </LinearLayout>
