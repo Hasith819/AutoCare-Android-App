@@ -13,9 +13,18 @@
         android:id="@+id/tvWelcome"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Welcome to AutoCare"
-        android:textColor="@color/purple_500"
+        android:text="@string/app_name"
+        android:textColor="@color/yellow"
         android:textSize="@dimen/splash_text_size"
+        android:textStyle="bold"
+        android:layout_marginBottom="@dimen/default_margin"/>
+    <TextView
+        android:id="@+id/tvDescription"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Login to access your AutoCare account"
+        android:textColor="@color/black"
+        android:textSize="15dp"
         android:textStyle="bold"
         android:layout_marginBottom="@dimen/default_margin"/>
 
