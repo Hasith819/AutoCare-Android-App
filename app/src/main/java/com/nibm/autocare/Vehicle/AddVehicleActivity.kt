@@ -5,10 +5,13 @@ import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
@@ -18,23 +21,33 @@ import com.nibm.autocare.R
 
 class AddVehicleActivity : AppCompatActivity() {
 
+    private lateinit var etRegistrationNumber: EditText
     private lateinit var spinnerBrand: Spinner
     private lateinit var spinnerModel: Spinner
+    private lateinit var etManufacturedYear: EditText
+    private lateinit var btnSaveVehicle: Button
     private lateinit var btnHome: LinearLayout
 
     private val database = FirebaseDatabase.getInstance()
     private val brandsRef = database.reference.child("vehicles").child("brands")
+    private val auth = FirebaseAuth.getInstance()
 
     private val brandList = mutableListOf<String>()
     private val modelList = mutableListOf<String>()
+
+    private var selectedBrand: String = ""
+    private var selectedModel: String = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_vehicle)
 
         // Initialize views
+        etRegistrationNumber = findViewById(R.id.etRegistrationNumber)
         spinnerBrand = findViewById(R.id.spinnerBrand)
         spinnerModel = findViewById(R.id.spinnerModel)
+        etManufacturedYear = findViewById(R.id.etManufacturedYear)
+        btnSaveVehicle = findViewById(R.id.btnSaveVehicle)
         btnHome = findViewById(R.id.llHome)
 
         // Load brands into the brand spinner
@@ -43,13 +56,29 @@ class AddVehicleActivity : AppCompatActivity() {
         // Set up brand spinner item selection listener
         spinnerBrand.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val selectedBrand = brandList[position]
+                selectedBrand = brandList[position]
                 loadModels(selectedBrand)
             }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {
                 // Do nothing
             }
+        }
+
+        // Set up model spinner item selection listener
+        spinnerModel.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                selectedModel = modelList[position]
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                // Do nothing
+            }
+        }
+
+        // Set up save vehicle button click listener
+        btnSaveVehicle.setOnClickListener {
+            saveVehicle()
         }
 
         // Set up home button click listener
@@ -101,5 +130,50 @@ class AddVehicleActivity : AppCompatActivity() {
                 Toast.makeText(this@AddVehicleActivity, "Failed to load models: ${error.message}", Toast.LENGTH_SHORT).show()
             }
         })
+    }
+
+    // Save vehicle details to Firebase Realtime Database
+    private fun saveVehicle() {
+        val registrationNumber = etRegistrationNumber.text.toString().trim()
+        val manufacturedYear = etManufacturedYear.text.toString().trim()
+
+        // Validate all fields
+        if (registrationNumber.isEmpty() || selectedBrand.isEmpty() || selectedModel.isEmpty() || manufacturedYear.isEmpty()) {
+            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Get the current user
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Create a vehicle object
+        val vehicle = HashMap<String, Any>()
+        vehicle["registrationNumber"] = registrationNumber
+        vehicle["brand"] = selectedBrand
+        vehicle["model"] = selectedModel
+        vehicle["manufacturedYear"] = manufacturedYear
+
+        // Save vehicle under the user's ID
+        val userId = currentUser.uid
+        val userVehiclesRef = database.reference.child("users").child(userId).child("vehicles")
+        val vehicleId = userVehiclesRef.push().key // Generate a unique ID for the vehicle
+
+        if (vehicleId != null) {
+            userVehiclesRef.child(vehicleId).setValue(vehicle)
+                .addOnSuccessListener {
+                    Toast.makeText(this, "Vehicle saved successfully", Toast.LENGTH_SHORT).show()
+                    // Navigate to HomeActivity
+                    val intent = Intent(this, HomeActivity::class.java)
+                    startActivity(intent)
+                    finish() // Close the current activity
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Failed to save vehicle: ${it.message}", Toast.LENGTH_SHORT).show()
+                }
+        }
     }
 }

@@ -36,7 +36,7 @@
         android:text="Vehicle Registration Number"
         android:textSize="16sp"
         android:textColor="@color/black"
-        android:layout_marginTop="30dp" />
+        android:layout_marginTop="35dp" />
 
     <EditText
         android:id="@+id/etRegistrationNumber"
@@ -46,7 +46,7 @@
         android:inputType="text"
         android:padding="12dp"
         android:background="@drawable/edit_text_background"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="15dp" />
 
     <!-- Vehicle Brand Dropdown -->
     <TextView
@@ -55,7 +55,7 @@
         android:text="Vehicle Brand"
         android:textSize="16sp"
         android:textColor="@color/black"
-        android:layout_marginTop="30dp" />
+        android:layout_marginTop="35dp" />
 
     <Spinner
         android:id="@+id/spinnerBrand"
@@ -63,7 +63,7 @@
         android:layout_height="wrap_content"
         android:padding="12dp"
         android:background="@drawable/edit_text_background"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="15dp" />
 
     <!-- Vehicle Model Dropdown -->
     <TextView
@@ -72,7 +72,7 @@
         android:text="Vehicle Model"
         android:textSize="16sp"
         android:textColor="@color/black"
-        android:layout_marginTop="30dp" />
+        android:layout_marginTop="35dp" />
 
     <Spinner
         android:id="@+id/spinnerModel"
@@ -80,7 +80,7 @@
         android:layout_height="wrap_content"
         android:padding="12dp"
         android:background="@drawable/edit_text_background"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="15dp" />
 
     <!-- Manufactured Year -->
     <TextView
@@ -89,7 +89,7 @@
         android:text="Manufactured Year"
         android:textSize="16sp"
         android:textColor="@color/black"
-        android:layout_marginTop="30dp" />
+        android:layout_marginTop="35dp" />
 
     <EditText
         android:id="@+id/etManufacturedYear"
@@ -99,7 +99,7 @@
         android:inputType="number"
         android:padding="12dp"
         android:background="@drawable/edit_text_background"
-        android:layout_marginTop="8dp" />
+        android:layout_marginTop="15dp" />
 
     <!-- Save Button -->
     <Button
