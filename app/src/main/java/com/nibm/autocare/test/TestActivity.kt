@@ -1,68 +1,98 @@
 package com.nibm.autocare
 
+import android.os.AsyncTask
 import android.os.Bundle
-import android.widget.ArrayAdapter
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
-import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import com.nibm.autocare.R
+import java.util.Properties
+import javax.mail.Authenticator
+import javax.mail.Message
+import javax.mail.MessagingException
+import javax.mail.PasswordAuthentication
+import javax.mail.Session
+import javax.mail.Transport
+import javax.mail.internet.InternetAddress
+import javax.mail.internet.MimeMessage
 
 class TestActivity : AppCompatActivity() {
 
-    private lateinit var etSearchEmail: EditText
-    private lateinit var btnSearch: Button
-    private lateinit var lvEmails: ListView
-    private lateinit var emailList: MutableList<String>
-    private lateinit var adapter: ArrayAdapter<String>
+    private lateinit var etRecipientEmail: EditText
+    private lateinit var etEmailBody: EditText
+    private lateinit var btnSendEmail: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_test)
 
-        etSearchEmail = findViewById(R.id.etSearchEmail)
-        btnSearch = findViewById(R.id.btnSearch)
-        lvEmails = findViewById(R.id.lvEmails)
+        // Initialize views
+        etRecipientEmail = findViewById(R.id.etRecipientEmail)
+        etEmailBody = findViewById(R.id.etEmailBody)
+        btnSendEmail = findViewById(R.id.btnSendEmail)
 
-        emailList = mutableListOf()
-        adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, emailList)
-        lvEmails.adapter = adapter
+        // Set up send email button click listener
+        btnSendEmail.setOnClickListener {
+            val recipientEmail = etRecipientEmail.text.toString().trim()
 
-        btnSearch.setOnClickListener {
-            val searchQuery = etSearchEmail.text.toString().trim()
-            if (searchQuery.isEmpty()) {
-                Toast.makeText(this, "Please enter an email to search", Toast.LENGTH_SHORT).show()
+            if (recipientEmail.isEmpty()) {
+                Toast.makeText(this, "Please enter recipient email", Toast.LENGTH_SHORT).show()
             } else {
-                searchEmails(searchQuery)
+                // Send email in the background
+                SendEmailTask().execute(recipientEmail)
             }
         }
     }
 
-    private fun searchEmails(searchQuery: String) {
-        val database = FirebaseDatabase.getInstance().reference.child("users")
-        database.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                emailList.clear()
-                for (userSnapshot in snapshot.children) {
-                    val email = userSnapshot.child("email").getValue(String::class.java)
-                    if (email != null && email.contains(searchQuery, ignoreCase = true)) {
-                        emailList.add(email)
-                    }
-                }
-                if (emailList.isEmpty()) {
-                    Toast.makeText(this@TestActivity, "No matching emails found", Toast.LENGTH_SHORT).show()
-                }
-                adapter.notifyDataSetChanged()
-            }
+    // AsyncTask to send email in the background
+    private inner class SendEmailTask : AsyncTask<String, Void, String>() {
 
-            override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@TestActivity, "Database error: ${error.message}", Toast.LENGTH_SHORT).show()
+        override fun doInBackground(vararg params: String): String {
+            val recipientEmail = params[0]
+            val emailBody = "This is a hardcoded message sent from the AutoCare app."
+
+            // Sender's email credentials
+            val senderEmail = "hasithpubudu@gmail.com" // Replace with your Gmail address
+            val senderPassword = "buyf seft oeao ywnj" // Replace with your 16-digit App Password
+
+            // Set up mail server properties
+            val properties = Properties()
+            properties["mail.smtp.host"] = "smtp.gmail.com"
+            properties["mail.smtp.port"] = "587"
+            properties["mail.smtp.auth"] = "true"
+            properties["mail.smtp.starttls.enable"] = "true"
+
+            // Create a session with authentication
+            val session = Session.getInstance(properties, object : Authenticator() {
+                override fun getPasswordAuthentication(): PasswordAuthentication {
+                    return PasswordAuthentication(senderEmail, senderPassword)
+                }
+            })
+
+            try {
+                // Create a MimeMessage
+                val message = MimeMessage(session)
+                message.setFrom(InternetAddress(senderEmail))
+                message.addRecipient(Message.RecipientType.TO, InternetAddress(recipientEmail))
+                message.subject = "Test Email from AutoCare"
+                message.setText(emailBody)
+
+                // Send the email
+                Transport.send(message)
+                return "Email sent successfully to $recipientEmail"
+            } catch (e: MessagingException) {
+                Log.e("SendEmailTask", "Failed to send email", e)
+                return "Failed to send email: ${e.message}"
+            } catch (e: Exception) {
+                Log.e("SendEmailTask", "Unexpected error", e)
+                return "Unexpected error: ${e.message}"
             }
-        })
+        }
+
+        override fun onPostExecute(result: String) {
+            Toast.makeText(this@TestActivity, result, Toast.LENGTH_SHORT).show()
+            Log.d("SendEmailTask", result) // Log the result to Logcat
+        }
     }
 }

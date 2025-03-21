@@ -5,31 +5,52 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Search Bar -->
-    <EditText
-        android:id="@+id/etSearchEmail"
+    <!-- Recipient Email -->
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Search by email"
+        android:text="Recipient Email"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:layout_marginTop="16dp" />
+
+    <EditText
+        android:id="@+id/etRecipientEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter recipient email"
         android:inputType="textEmailAddress"
         android:padding="12dp"
-        android:background="@drawable/edit_text_background" />
-
-    <!-- Search Button -->
-    <Button
-        android:id="@+id/btnSearch"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Search"
-        android:backgroundTint="@color/black"
-        android:textColor="@color/yellow"
+        android:background="@drawable/edit_text_background"
         android:layout_marginTop="8dp" />
 
-    <!-- List to Display Results -->
-    <ListView
-        android:id="@+id/lvEmails"
+    <!-- Email Body -->
+    <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:text="Email Body"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:layout_marginTop="16dp" />
+
+    <EditText
+        android:id="@+id/etEmailBody"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Enter email body"
+        android:inputType="textMultiLine"
+        android:padding="12dp"
+        android:background="@drawable/edit_text_background"
+        android:layout_marginTop="8dp" />
+
+    <!-- Send Button -->
+    <Button
+        android:id="@+id/btnSendEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Send Email"
+        android:backgroundTint="@color/black"
+        android:textColor="@color/yellow"
         android:layout_marginTop="16dp" />
 
 </LinearLayout>

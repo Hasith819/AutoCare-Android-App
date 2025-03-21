@@ -2,9 +2,11 @@ package com.nibm.autocare
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
-import android.widget.ArrayAdapter
+import android.view.ViewGroup
+import android.widget.BaseAdapter
 import android.widget.ListView
 import android.widget.PopupMenu
 import android.widget.TextView
@@ -89,20 +91,21 @@ class HomeActivity : AppCompatActivity() {
 
             vehiclesRef.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    val vehicleList = mutableListOf<String>()
+                    val vehicleList = mutableListOf<Vehicle>()
                     for (vehicleSnapshot in snapshot.children) {
                         val registrationNumber = vehicleSnapshot.child("registrationNumber").getValue(String::class.java)
+                        val brand = vehicleSnapshot.child("brand").getValue(String::class.java)
+                        val manufacturedYear = vehicleSnapshot.child("manufacturedYear").getValue(String::class.java)
                         val model = vehicleSnapshot.child("model").getValue(String::class.java)
 
-                        if (registrationNumber != null && model != null) {
-                            // Format the vehicle details
-                            val vehicleDetails = "$registrationNumber\n$model"
-                            vehicleList.add(vehicleDetails)
+                        if (registrationNumber != null && brand != null && manufacturedYear != null && model != null) {
+                            val vehicle = Vehicle(registrationNumber, brand, manufacturedYear, model)
+                            vehicleList.add(vehicle)
                         }
                     }
 
-                    // Populate the ListView
-                    val adapter = ArrayAdapter(this@HomeActivity, android.R.layout.simple_list_item_1, vehicleList)
+                    // Populate the ListView with a custom adapter
+                    val adapter = VehicleAdapter(vehicleList)
                     lvVehicles.adapter = adapter
                 }
 
@@ -178,6 +181,59 @@ class HomeActivity : AppCompatActivity() {
             }
         } else {
             Toast.makeText(this, "No user is currently logged in", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Data class for Vehicle
+    data class Vehicle(
+        val registrationNumber: String,
+        val brand: String,
+        val manufacturedYear: String,
+        val model: String
+    )
+
+    // Custom Adapter for Vehicle List
+    inner class VehicleAdapter(private val vehicleList: List<Vehicle>) : BaseAdapter() {
+        override fun getCount(): Int {
+            return vehicleList.size
+        }
+
+        override fun getItem(position: Int): Any {
+            return vehicleList[position]
+        }
+
+        override fun getItemId(position: Int): Long {
+            return position.toLong()
+        }
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+            val view: View
+            val viewHolder: ViewHolder
+
+            if (convertView == null) {
+                view = LayoutInflater.from(parent?.context).inflate(R.layout.list_item_vehicle, parent, false)
+                viewHolder = ViewHolder(view)
+                view.tag = viewHolder
+            } else {
+                view = convertView
+                viewHolder = view.tag as ViewHolder
+            }
+
+            val vehicle = vehicleList[position]
+            viewHolder.tvRegistrationNumber.text = vehicle.registrationNumber
+            viewHolder.tvBrand.text = vehicle.brand
+            viewHolder.tvManufacturedYear.text = vehicle.manufacturedYear
+            viewHolder.tvModel.text = vehicle.model
+
+            return view
+        }
+
+        // ViewHolder pattern for better performance
+        private inner class ViewHolder(view: View) {
+            val tvRegistrationNumber: TextView = view.findViewById(R.id.tvRegistrationNumber)
+            val tvBrand: TextView = view.findViewById(R.id.tvBrand)
+            val tvManufacturedYear: TextView = view.findViewById(R.id.tvManufacturedYear)
+            val tvModel: TextView = view.findViewById(R.id.tvModel)
         }
     }
 }

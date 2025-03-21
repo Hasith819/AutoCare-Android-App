@@ -34,6 +34,11 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
     }
+    packagingOptions {
+        exclude ("META-INF/NOTICE.md")
+        exclude ("META-INF/LICENSE.md")
+        exclude ("META-INF/DEPENDENCIES")
+    }
 }
 
 dependencies {
@@ -46,6 +51,7 @@ dependencies {
     implementation(libs.firebase.database.ktx)
     implementation(libs.firebase.functions.ktx)
     implementation(libs.androidx.material3.android)
+    implementation(libs.androidx.work.runtime.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -57,6 +63,9 @@ dependencies {
    implementation ("com.google.firebase:firebase-database-ktx:20.3.0")
 
     implementation ("com.google.firebase:firebase-functions-ktx")
+
+    implementation ("com.sun.mail:android-mail:1.6.7")
+    implementation ("com.sun.mail:android-activation:1.6.7")
 
 
 }
