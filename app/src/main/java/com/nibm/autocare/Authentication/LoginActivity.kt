@@ -8,7 +8,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
-import com.nibm.autocare.Home.HomeActivity
+import com.nibm.autocare.HomeActivity
 import com.nibm.autocare.R
 
 class LoginActivity : AppCompatActivity() {

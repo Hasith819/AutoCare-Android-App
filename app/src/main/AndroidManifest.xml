@@ -18,7 +18,7 @@
             android:name=".Vehicle.AddVehicleActivity"
             android:exported="false" />
         <activity
-            android:name=".Home.HomeActivity"
+            android:name=".HomeActivity"
             android:exported="false" />
         <activity
             android:name=".TestActivity"
