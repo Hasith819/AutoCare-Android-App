@@ -3,8 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="@color/white">
+    android:padding="16dp">
 
     <!-- Header with App Name and Menu Icon -->
     <LinearLayout
@@ -21,98 +20,17 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Add Vehicle"
+            android:text="Add Services"
             android:textColor="@color/yellow"
             android:textSize="24sp"
             android:textStyle="bold"
             android:gravity="center" />
     </LinearLayout>
 
-    <!-- Vehicle Registration Number -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Vehicle Registration Number"
-        android:textSize="16sp"
-        android:textColor="@color/black"
-        android:layout_marginTop="30dp" />
 
-    <EditText
-        android:id="@+id/etRegistrationNumber"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter registration number"
-        android:inputType="text"
-        android:padding="12dp"
-        android:background="@drawable/edit_text_background"
-        android:layout_marginTop="8dp" />
-
-    <!-- Vehicle Brand Dropdown -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Vehicle Brand"
-        android:textSize="16sp"
-        android:textColor="@color/black"
-        android:layout_marginTop="30dp" />
-
-    <Spinner
-        android:id="@+id/spinnerBrand"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:background="@drawable/edit_text_background"
-        android:layout_marginTop="8dp" />
-
-    <!-- Vehicle Model Dropdown -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Vehicle Model"
-        android:textSize="16sp"
-        android:textColor="@color/black"
-        android:layout_marginTop="30dp" />
-
-    <Spinner
-        android:id="@+id/spinnerModel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:background="@drawable/edit_text_background"
-        android:layout_marginTop="8dp" />
-
-    <!-- Manufactured Year -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Manufactured Year"
-        android:textSize="16sp"
-        android:textColor="@color/black"
-        android:layout_marginTop="30dp" />
-
-    <EditText
-        android:id="@+id/etManufacturedYear"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter manufactured year"
-        android:inputType="number"
-        android:padding="12dp"
-        android:background="@drawable/edit_text_background"
-        android:layout_marginTop="8dp" />
-
-    <!-- Save Button -->
-    <Button
-        android:id="@+id/btnSaveVehicle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Save Vehicle"
-        android:backgroundTint="@color/black"
-        android:textColor="@color/yellow"
-        android:layout_marginTop="51dp" />
-
-    <!-- List to Display Vehicle Data -->
+    <!-- ListView to Display Uploaded Pictures -->
     <ListView
-        android:id="@+id/lvVehicles"
+        android:id="@+id/lvPictures"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
@@ -121,6 +39,37 @@
         android:dividerHeight="5dp"
         android:background="@color/background_color"
         android:padding="8dp" />
+
+    <!-- Add Picture Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp"
+        android:weightSum="2">
+
+        <!-- Button to Open Gallery -->
+        <Button
+            android:id="@+id/btnGallery"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Select from Gallery"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/yellow"
+            android:layout_marginEnd="8dp" />
+
+        <!-- Button to Open Camera -->
+        <Button
+            android:id="@+id/btnCamera"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Take a Picture"
+            android:backgroundTint="@color/black"
+            android:textColor="@color/yellow" />
+    </LinearLayout>
+
 
     <!-- Footer -->
     <LinearLayout
@@ -157,7 +106,7 @@
 
         <!-- Add Service Details -->
         <LinearLayout
-            android:id="@+id/llAddService"
+            android:id="@+id/llAddVehicle"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -167,17 +116,16 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:src="@drawable/baseline_car_repair_24"
+                android:src="@drawable/baseline_directions_car_24"
                 android:contentDescription="Add Service icon" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Add Service"
+                android:text="Add Vehicle"
                 android:textColor="@color/yellow"
                 android:textSize="14sp"
                 android:layout_marginTop="8dp" />
         </LinearLayout>
     </LinearLayout>
-
 </LinearLayout>

@@ -16,6 +16,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.nibm.autocare.AddServiceActivity
 import com.nibm.autocare.HomeActivity
 import com.nibm.autocare.R
 
@@ -87,6 +88,14 @@ class AddVehicleActivity : AppCompatActivity() {
             startActivity(intent)
             finish() // Close the current activity
         }
+
+
+
+        findViewById<View>(R.id.llAddService).setOnClickListener {
+            val intent = Intent(this, AddServiceActivity::class.java)
+            startActivity(intent)
+        }
+
     }
 
     // Load brands from Firebase Realtime Database

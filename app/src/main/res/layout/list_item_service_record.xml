@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@color/yellow">
+
+    <!-- Service Date -->
+    <TextView
+        android:id="@+id/tvServiceDate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Service Date: 2023-10-01"
+        android:textSize="18sp"
+        android:textColor="@color/black"
+        android:textStyle="bold"
+        android:padding="8dp" />
+
+    <!-- Service Description -->
+    <TextView
+        android:id="@+id/tvServiceDescription"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Description: Oil Change"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:padding="8dp" />
+
+    <!-- Service Cost -->
+    <TextView
+        android:id="@+id/tvServiceCost"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Cost: $50.00"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        android:padding="8dp" />
+
+</LinearLayout>

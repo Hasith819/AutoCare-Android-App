@@ -45,6 +45,13 @@ class HomeActivity : AppCompatActivity() {
         // Fetch and display the user's vehicles
         fetchVehicles()
 
+
+        findViewById<View>(R.id.llAddService).setOnClickListener {
+            val intent = Intent(this, AddServiceActivity::class.java)
+            startActivity(intent)
+        }
+
+
         // Set up menu icon click listener
         findViewById<View>(R.id.ivMenu).setOnClickListener {
             showMenu(it)
@@ -69,7 +76,7 @@ class HomeActivity : AppCompatActivity() {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val username = snapshot.child("username").getValue(String::class.java)
                     if (username != null) {
-                        tvGreeting.text = "Hello, $username"
+                        tvGreeting.text = "Hello, $username!"
                     } else {
                         tvGreeting.text = "Hello, User"
                     }
