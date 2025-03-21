@@ -34,7 +34,6 @@
         android:src="@drawable/baseline_menu_24"
         android:contentDescription="Menu icon"
         android:padding="8dp" />
-
   </LinearLayout>
 
   <!-- Greeting with Username -->
@@ -65,5 +64,63 @@
       android:backgroundTint="@color/black"
       android:textColor="@color/yellow"
       android:layout_marginTop="16dp" />
+
+  <!-- Footer -->
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:background="@color/black"
+      android:padding="16dp"
+      android:layout_marginTop="16dp">
+
+    <!-- Home -->
+    <LinearLayout
+        android:id="@+id/llHome"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center">
+
+      <ImageView
+          android:layout_width="24dp"
+          android:layout_height="24dp"
+          android:src="@drawable/baseline_home_24"
+          android:contentDescription="Home icon" />
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="Home"
+          android:textColor="@color/yellow"
+          android:textSize="14sp"
+          android:layout_marginTop="8dp" />
+    </LinearLayout>
+
+    <!-- Add Service Details -->
+    <LinearLayout
+        android:id="@+id/llAddService"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center">
+
+      <ImageView
+          android:layout_width="24dp"
+          android:layout_height="24dp"
+          android:src="@drawable/baseline_car_repair_24"
+          android:contentDescription="Add Service icon" />
+
+      <TextView
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:text="Add Service"
+          android:textColor="@color/yellow"
+          android:textSize="14sp"
+          android:layout_marginTop="8dp" />
+    </LinearLayout>
+  </LinearLayout>
 
 </LinearLayout>

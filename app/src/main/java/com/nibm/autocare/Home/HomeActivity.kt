@@ -88,7 +88,7 @@ class HomeActivity : AppCompatActivity() {
                 }
                 R.id.menu_delete_account -> {
                     // Handle delete account
-                    Toast.makeText(this, "Delete Account clicked", Toast.LENGTH_SHORT).show()
+                    deleteAccount()
                     true
                 }
                 else -> false
@@ -109,5 +109,35 @@ class HomeActivity : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish() // Close the current activity
+    }
+
+    // Delete the user account and associated data
+    private fun deleteAccount() {
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            val userId = currentUser.uid
+
+            // Delete user data from Realtime Database
+            val userRef = database.reference.child("users").child(userId)
+            userRef.removeValue().addOnCompleteListener { dbTask ->
+                if (dbTask.isSuccessful) {
+                    // Delete Firebase Authentication account
+                    currentUser.delete().addOnCompleteListener { authTask ->
+                        if (authTask.isSuccessful) {
+                            Toast.makeText(this, "Account deleted successfully", Toast.LENGTH_SHORT).show()
+
+                            // Logout and navigate to LoginActivity
+                            logout()
+                        } else {
+                            Toast.makeText(this, "Failed to delete account: ${authTask.exception?.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } else {
+                    Toast.makeText(this, "Failed to delete user data: ${dbTask.exception?.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            Toast.makeText(this, "No user is currently logged in", Toast.LENGTH_SHORT).show()
+        }
     }
 }
