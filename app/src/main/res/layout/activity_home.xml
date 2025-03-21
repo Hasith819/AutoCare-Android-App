@@ -5,22 +5,36 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-  <!-- Header with App Name -->
+  <!-- Header with App Name and Menu Icon -->
   <LinearLayout
       android:layout_width="match_parent"
       android:layout_height="wrap_content"
       android:background="@color/black"
       android:padding="16dp"
-      android:gravity="center">
+      android:gravity="center"
+      android:orientation="horizontal">
 
+    <!-- App Name -->
     <TextView
         android:id="@+id/tvAppName"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_weight="1"
         android:text="AutoCare"
         android:textColor="@color/yellow"
         android:textSize="24sp"
-        android:textStyle="bold" />
+        android:textStyle="bold"
+        android:gravity="center" />
+
+    <!-- Menu Icon (3 lines) -->
+    <ImageView
+        android:id="@+id/ivMenu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/baseline_menu_24"
+        android:contentDescription="Menu icon"
+        android:padding="8dp" />
+
   </LinearLayout>
 
   <!-- Greeting with Username -->
@@ -42,7 +56,7 @@
       android:layout_weight="1"
       android:layout_marginTop="16dp" />
 
-  <!-- Search Button at the Bottom -->
+  <!-- Add Vehicle Button at the Bottom -->
   <Button
       android:id="@+id/btnSearch"
       android:layout_width="match_parent"

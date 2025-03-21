@@ -10,7 +10,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.nibm.autocare.Home.HomeActivity
 import com.nibm.autocare.R
-import com.nibm.autocare.TestActivity
 
 class LoginActivity : AppCompatActivity() {
 
