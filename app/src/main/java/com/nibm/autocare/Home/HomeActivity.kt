@@ -2,9 +2,11 @@ package com.nibm.autocare
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.MenuItem
 import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.ListView
+import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +15,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.nibm.autocare.Authentication.LoginActivity
 import com.nibm.autocare.Vehicle.AddVehicleActivity
 
 class HomeActivity : AppCompatActivity() {
@@ -37,21 +40,20 @@ class HomeActivity : AppCompatActivity() {
         // Fetch and display the username from Firebase Realtime Database
         fetchUsername()
 
-        // Load the user's vehicles into the ListView
-        loadUserVehicles()
+        // Fetch and display the user's vehicles
+        fetchVehicles()
+
+        // Set up menu icon click listener
+        findViewById<View>(R.id.ivMenu).setOnClickListener {
+            showMenu(it)
+        }
 
         // Set up "Add Vehicle" button click listener
         findViewById<View>(R.id.btnSearch).setOnClickListener {
+            // Navigate to AddVehicleActivity
             val intent = Intent(this, AddVehicleActivity::class.java)
             startActivity(intent)
         }
-
-        // Set up footer navigation
-        findViewById<View>(R.id.llHome).setOnClickListener {
-            // Already in HomeActivity, no action needed
-        }
-
-
     }
 
     // Fetch username from Firebase Realtime Database
@@ -78,14 +80,14 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    // Load the user's vehicles from Firebase Realtime Database
-    private fun loadUserVehicles() {
+    // Fetch vehicles from Firebase Realtime Database
+    private fun fetchVehicles() {
         val currentUser = auth.currentUser
         if (currentUser != null) {
             val userId = currentUser.uid
-            val userVehiclesRef = database.reference.child("users").child(userId).child("vehicles")
+            val vehiclesRef = database.reference.child("users").child(userId).child("vehicles")
 
-            userVehiclesRef.addValueEventListener(object : ValueEventListener {
+            vehiclesRef.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val vehicleList = mutableListOf<String>()
                     for (vehicleSnapshot in snapshot.children) {
@@ -93,9 +95,9 @@ class HomeActivity : AppCompatActivity() {
                         val model = vehicleSnapshot.child("model").getValue(String::class.java)
 
                         if (registrationNumber != null && model != null) {
-
-                            val vehicleInfo = "$registrationNumber\n$model"
-                            vehicleList.add(vehicleInfo)
+                            // Format the vehicle details
+                            val vehicleDetails = "$registrationNumber\n$model"
+                            vehicleList.add(vehicleDetails)
                         }
                     }
 
@@ -105,9 +107,77 @@ class HomeActivity : AppCompatActivity() {
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(this@HomeActivity, "Failed to load vehicles: ${error.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@HomeActivity, "Failed to fetch vehicles: ${error.message}", Toast.LENGTH_SHORT).show()
                 }
             })
+        }
+    }
+
+    // Function to show the dropdown menu
+    private fun showMenu(view: View) {
+        val popupMenu = PopupMenu(this, view)
+        popupMenu.inflate(R.menu.menu_home) // Inflate the menu_home.xml
+
+        // Set click listener for menu items
+        popupMenu.setOnMenuItemClickListener { item: MenuItem ->
+            when (item.itemId) {
+                R.id.menu_logout -> {
+                    // Handle logout
+                    logout()
+                    true
+                }
+                R.id.menu_delete_account -> {
+                    // Handle delete account
+                    deleteAccount()
+                    true
+                }
+                else -> false
+            }
+        }
+
+        // Show the menu
+        popupMenu.show()
+    }
+
+    // Logout the user
+    private fun logout() {
+        auth.signOut() // Sign out from Firebase
+        Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show()
+
+        // Navigate to LoginActivity and clear the back stack
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        finish() // Close the current activity
+    }
+
+    // Delete the user account and associated data
+    private fun deleteAccount() {
+        val currentUser = auth.currentUser
+        if (currentUser != null) {
+            val userId = currentUser.uid
+
+            // Delete user data from Realtime Database
+            val userRef = database.reference.child("users").child(userId)
+            userRef.removeValue().addOnCompleteListener { dbTask ->
+                if (dbTask.isSuccessful) {
+                    // Delete Firebase Authentication account
+                    currentUser.delete().addOnCompleteListener { authTask ->
+                        if (authTask.isSuccessful) {
+                            Toast.makeText(this, "Account deleted successfully", Toast.LENGTH_SHORT).show()
+
+                            // Logout and navigate to LoginActivity
+                            logout()
+                        } else {
+                            Toast.makeText(this, "Failed to delete account: ${authTask.exception?.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } else {
+                    Toast.makeText(this, "Failed to delete user data: ${dbTask.exception?.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        } else {
+            Toast.makeText(this, "No user is currently logged in", Toast.LENGTH_SHORT).show()
         }
     }
 }
