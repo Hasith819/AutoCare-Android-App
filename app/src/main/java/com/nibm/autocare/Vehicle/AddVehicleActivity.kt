@@ -7,7 +7,6 @@ import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.Spinner
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -20,15 +19,15 @@ import com.nibm.autocare.AddServiceActivity
 import com.nibm.autocare.HomeActivity
 import com.nibm.autocare.R
 
-
 class AddVehicleActivity : AppCompatActivity() {
 
     private lateinit var etRegistrationNumber: EditText
     private lateinit var spinnerBrand: Spinner
     private lateinit var spinnerModel: Spinner
     private lateinit var etManufacturedYear: EditText
+    private lateinit var etCurrentMileage: EditText
+    private lateinit var etWeeklyRidingDistance: EditText
     private lateinit var btnSaveVehicle: Button
-    private lateinit var btnHome: LinearLayout
 
     private val database = FirebaseDatabase.getInstance()
     private val brandsRef = database.reference.child("vehicles").child("brands")
@@ -44,14 +43,14 @@ class AddVehicleActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_vehicle)
 
-
         // Initialize views
         etRegistrationNumber = findViewById(R.id.etRegistrationNumber)
         spinnerBrand = findViewById(R.id.spinnerBrand)
         spinnerModel = findViewById(R.id.spinnerModel)
         etManufacturedYear = findViewById(R.id.etManufacturedYear)
+        etCurrentMileage = findViewById(R.id.etCurrentMileage)
+        etWeeklyRidingDistance = findViewById(R.id.etWeeklyRidingDistance)
         btnSaveVehicle = findViewById(R.id.btnSaveVehicle)
-        btnHome = findViewById(R.id.llHome)
 
         // Load brands into the brand spinner
         loadBrands()
@@ -84,15 +83,7 @@ class AddVehicleActivity : AppCompatActivity() {
             saveVehicle()
         }
 
-        // Set up home button click listener
-        btnHome.setOnClickListener {
-            val intent = Intent(this, HomeActivity::class.java)
-            startActivity(intent)
-            finish() // Close the current activity
-        }
-
-
-
+        // Set up footer navigation
         findViewById<View>(R.id.llHome).setOnClickListener {
             val intent = Intent(this, HomeActivity::class.java)
             startActivity(intent)
@@ -107,7 +98,6 @@ class AddVehicleActivity : AppCompatActivity() {
             val intent = Intent(this, AddServiceActivity::class.java)
             startActivity(intent)
         }
-
     }
 
     // Load brands from Firebase Realtime Database
@@ -153,13 +143,15 @@ class AddVehicleActivity : AppCompatActivity() {
         })
     }
 
-    // Save vehicle details to Firebase Realtime Database
+    // Save vehicle details to Firebase Realtime Database under "users_vehicles"
     private fun saveVehicle() {
         val registrationNumber = etRegistrationNumber.text.toString().trim()
         val manufacturedYear = etManufacturedYear.text.toString().trim()
+        val currentMileage = etCurrentMileage.text.toString().trim()
+        val weeklyRidingDistance = etWeeklyRidingDistance.text.toString().trim()
 
         // Validate all fields
-        if (registrationNumber.isEmpty() || selectedBrand.isEmpty() || selectedModel.isEmpty() || manufacturedYear.isEmpty()) {
+        if (registrationNumber.isEmpty() || selectedBrand.isEmpty() || selectedModel.isEmpty() || manufacturedYear.isEmpty() || currentMileage.isEmpty() || weeklyRidingDistance.isEmpty()) {
             Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
             return
         }
@@ -177,14 +169,16 @@ class AddVehicleActivity : AppCompatActivity() {
         vehicle["brand"] = selectedBrand
         vehicle["model"] = selectedModel
         vehicle["manufacturedYear"] = manufacturedYear
+        vehicle["currentMileage"] = currentMileage.toInt() // Save as integer
+        vehicle["weeklyRidingDistance"] = weeklyRidingDistance.toInt() // Save as integer
 
-        // Save vehicle under the user's ID
+        // Save vehicle under "users_vehicles" with user ID as a foreign key
         val userId = currentUser.uid
-        val userVehiclesRef = database.reference.child("users").child(userId).child("vehicles")
-        val vehicleId = userVehiclesRef.push().key // Generate a unique ID for the vehicle
+        val usersVehiclesRef = database.reference.child("users_vehicles").child(userId)
+        val vehicleId = usersVehiclesRef.push().key // Generate a unique ID for the vehicle
 
         if (vehicleId != null) {
-            userVehiclesRef.child(vehicleId).setValue(vehicle)
+            usersVehiclesRef.child(vehicleId).setValue(vehicle)
                 .addOnSuccessListener {
                     Toast.makeText(this, "Vehicle saved successfully", Toast.LENGTH_SHORT).show()
                     // Navigate to HomeActivity

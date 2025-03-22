@@ -96,7 +96,7 @@ class HomeActivity : AppCompatActivity() {
         val currentUser = auth.currentUser
         if (currentUser != null) {
             val userId = currentUser.uid
-            val vehiclesRef = database.reference.child("users").child(userId).child("vehicles")
+            val vehiclesRef = database.reference.child("users_vehicles").child(userId)
 
             vehiclesRef.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
