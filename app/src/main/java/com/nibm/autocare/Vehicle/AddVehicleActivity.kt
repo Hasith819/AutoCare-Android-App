@@ -89,10 +89,6 @@ class AddVehicleActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        findViewById<View>(R.id.llAddVehicle).setOnClickListener {
-            val intent = Intent(this, AddVehicleActivity::class.java)
-            startActivity(intent)
-        }
 
         findViewById<View>(R.id.llAddService).setOnClickListener {
             val intent = Intent(this, AddServiceActivity::class.java)

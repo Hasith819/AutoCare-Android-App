@@ -99,7 +99,6 @@
                 android:background="@drawable/edit_text_background"
                 android:layout_marginTop="8dp" />
 
-
             <!-- Dropdown to Select Service Type -->
             <TextView
                 android:layout_width="match_parent"
@@ -117,8 +116,6 @@
                 android:background="@drawable/edit_text_background"
                 android:layout_marginTop="8dp" />
 
-
-
             <!-- Checklist for Services -->
             <TextView
                 android:layout_width="match_parent"
@@ -134,35 +131,12 @@
                 android:orientation="vertical"
                 android:layout_marginTop="10dp">
 
+                <!-- Common Checkboxes -->
                 <CheckBox
                     android:id="@+id/cbEngineOilChange"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="Engine Oil Change" />
-
-                <CheckBox
-                    android:id="@+id/cbAirFilterChange"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Air Filter Change" />
-
-                <CheckBox
-                    android:id="@+id/cbCabinFilterChange"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Cabin Filter Change" />
-
-                <CheckBox
-                    android:id="@+id/cbCoolantReplace"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Coolant Replace" />
-
-                <CheckBox
-                    android:id="@+id/cbBrakeOilReplace"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Brake Oil Replace" />
 
                 <CheckBox
                     android:id="@+id/cbOilFilterReplace"
@@ -171,24 +145,109 @@
                     android:text="Oil Filter Replace" />
 
                 <CheckBox
-                    android:id="@+id/cbGearOil"
+                    android:id="@+id/cbFluidLevelChecks"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Gear Oil" />
+                    android:text="Fluid Level Checks" />
 
                 <CheckBox
-                    android:id="@+id/cbTimingBelt"
+                    android:id="@+id/cbTireInspection"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Timing Belt" />
+                    android:text="Tire Inspection" />
 
                 <CheckBox
-                    android:id="@+id/cbPlugReplace"
+                    android:id="@+id/cbBrakeSystemCheck"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Plug Replace" />
+                    android:text="Brake System Check" />
+
+                <CheckBox
+                    android:id="@+id/cbLightsElectricalsCheck"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Lights and Electricals Check" />
+
+                <CheckBox
+                    android:id="@+id/cbAirFilterInspection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Air Filter Inspection" />
+
+                <CheckBox
+                    android:id="@+id/cbWheelAlignmentCheck"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Wheel Alignment/Check" />
+
+                <!-- Additional Checkboxes for 40,000 km and 100,000 km Services -->
+                <CheckBox
+                    android:id="@+id/cbCabinFilterChange"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Cabin Filter Change" />
+
+                <CheckBox
+                    android:id="@+id/cbFuelFilterInspection"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Fuel Filter Inspection/Replacement" />
+
+                <CheckBox
+                    android:id="@+id/cbBrakeFluidFlush"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Brake Fluid Flush" />
+
+                <CheckBox
+                    android:id="@+id/cbCoolantFluidFlush"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Coolant Fluid Flush" />
+
+                <CheckBox
+                    android:id="@+id/cbTransmissionOilChange"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Transmission Oil Change" />
+
+                <CheckBox
+                    android:id="@+id/cbAirConditioningSystemCheck"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Air Conditioning System Check" />
+
+                <!-- Additional Checkboxes for 100,000 km Service -->
+                <CheckBox
+                    android:id="@+id/cbTimingBeltChainReplacement"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Timing Belt/Chain Replacement" />
+
+                <CheckBox
+                    android:id="@+id/cbSparkPlugReplacement"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Spark Plug Replacement" />
+
+                <CheckBox
+                    android:id="@+id/cbSuspensionComponentCheck"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Suspension Component Check" />
+
+                <CheckBox
+                    android:id="@+id/cbDriveBeltReplacement"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Drive Belt Replacement" />
+
+                <CheckBox
+                    android:id="@+id/cbFuelSystemService"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Fuel System Service" />
             </LinearLayout>
-
 
             <!-- Service Cost -->
             <TextView
@@ -285,7 +344,6 @@
                 android:padding="8dp"
                 tools:listitem="@layout/item_uploaded_photo" />
 
-
             <Button
                 android:id="@+id/btnSave"
                 android:layout_width="match_parent"
@@ -295,7 +353,6 @@
                 android:textColor="@color/yellow"
                 android:layout_marginTop="16dp"
                 android:layout_marginBottom="16dp"/>
-
         </LinearLayout>
     </ScrollView>
 
@@ -304,5 +361,4 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"/>
-
 </LinearLayout>

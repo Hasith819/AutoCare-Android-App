@@ -50,10 +50,6 @@ class HomeActivity : AppCompatActivity() {
             showMenu(it)
         }
 
-        findViewById<View>(R.id.llHome).setOnClickListener {
-            val intent = Intent(this, HomeActivity::class.java)
-            startActivity(intent)
-        }
 
         findViewById<View>(R.id.llAddVehicle).setOnClickListener {
             val intent = Intent(this, AddVehicleActivity::class.java)
