@@ -1,32 +1,27 @@
 package com.nibm.autocare
 
+import android.Manifest
 import android.app.DatePickerDialog
+import android.content.ContentValues
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.CheckBox
-import android.widget.DatePicker
-import android.widget.EditText
-import android.widget.Spinner
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.*
 import com.nibm.autocare.Vehicle.AddVehicleActivity
 import com.nibm.autocare.adapter.UploadedPhotosAdapter
 import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
+import java.util.*
 
 class AddServiceActivity : AppCompatActivity() {
 
@@ -63,7 +58,7 @@ class AddServiceActivity : AppCompatActivity() {
     private lateinit var uploadedPhotosAdapter: UploadedPhotosAdapter
     private val uploadedPhotos = mutableListOf<Uri>()
 
-    // Activity result launcher for gallery
+    // Activity result launcher for gallery and camera
     private val galleryLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == RESULT_OK) {
@@ -87,6 +82,20 @@ class AddServiceActivity : AppCompatActivity() {
                 }
             }
         }
+
+    private val cameraLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                cameraImageUri?.let { uri ->
+                    uploadedPhotos.add(uri)
+                    uploadedPhotosAdapter.notifyDataSetChanged()
+                    cameraImageUri = null
+                }
+            }
+        }
+
+    private var cameraImageUri: Uri? = null
+    private val CAMERA_PERMISSION_REQUEST_CODE = 1001
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -152,6 +161,15 @@ class AddServiceActivity : AppCompatActivity() {
         findViewById<View>(R.id.btnGallery).setOnClickListener {
             openGallery()
         }
+
+        // Set up camera button
+        findViewById<View>(R.id.btnCamera).setOnClickListener {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION_REQUEST_CODE)
+            } else {
+                openCamera()
+            }
+        }
     }
 
     // Open gallery for photo selection
@@ -159,6 +177,29 @@ class AddServiceActivity : AppCompatActivity() {
         val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
         galleryLauncher.launch(intent)
+    }
+
+    // Open camera for photo capture
+    private fun openCamera() {
+        val values = ContentValues().apply {
+            put(MediaStore.Images.Media.TITLE, "New Picture")
+            put(MediaStore.Images.Media.DESCRIPTION, "From Camera")
+        }
+        cameraImageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
+            putExtra(MediaStore.EXTRA_OUTPUT, cameraImageUri)
+        }
+        cameraLauncher.launch(cameraIntent)
+    }
+
+    // Handle permission result
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                openCamera()
+            }
+        }
     }
 
     // Fetch the logged-in user's vehicles from Firebase
