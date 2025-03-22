@@ -45,24 +45,26 @@ class HomeActivity : AppCompatActivity() {
         // Fetch and display the user's vehicles
         fetchVehicles()
 
+        // Set up menu icon click listener
+        findViewById<View>(R.id.ivMenu).setOnClickListener {
+            showMenu(it)
+        }
+
+        findViewById<View>(R.id.llHome).setOnClickListener {
+            val intent = Intent(this, HomeActivity::class.java)
+            startActivity(intent)
+        }
+
+        findViewById<View>(R.id.llAddVehicle).setOnClickListener {
+            val intent = Intent(this, AddVehicleActivity::class.java)
+            startActivity(intent)
+        }
 
         findViewById<View>(R.id.llAddService).setOnClickListener {
             val intent = Intent(this, AddServiceActivity::class.java)
             startActivity(intent)
         }
 
-
-        // Set up menu icon click listener
-        findViewById<View>(R.id.ivMenu).setOnClickListener {
-            showMenu(it)
-        }
-
-        // Set up "Add Vehicle" button click listener
-        findViewById<View>(R.id.btnSearch).setOnClickListener {
-            // Navigate to AddVehicleActivity
-            val intent = Intent(this, AddVehicleActivity::class.java)
-            startActivity(intent)
-        }
     }
 
     // Fetch username from Firebase Realtime Database

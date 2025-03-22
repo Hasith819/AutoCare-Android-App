@@ -3,8 +3,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
     android:background="@color/white">
+
+
 
     <!-- Header with App Name and Menu Icon -->
     <LinearLayout
@@ -28,156 +29,150 @@
             android:gravity="center" />
     </LinearLayout>
 
-    <!-- Vehicle Registration Number -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Vehicle Registration Number"
-        android:textSize="16sp"
-        android:textColor="@color/black"
-        android:layout_marginTop="30dp" />
-
-    <EditText
-        android:id="@+id/etRegistrationNumber"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter registration number"
-        android:inputType="text"
-        android:padding="12dp"
-        android:background="@drawable/edit_text_background"
-        android:layout_marginTop="8dp" />
-
-    <!-- Vehicle Brand Dropdown -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Vehicle Brand"
-        android:textSize="16sp"
-        android:textColor="@color/black"
-        android:layout_marginTop="30dp" />
-
-    <Spinner
-        android:id="@+id/spinnerBrand"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:background="@drawable/edit_text_background"
-        android:layout_marginTop="8dp" />
-
-    <!-- Vehicle Model Dropdown -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Vehicle Model"
-        android:textSize="16sp"
-        android:textColor="@color/black"
-        android:layout_marginTop="30dp" />
-
-    <Spinner
-        android:id="@+id/spinnerModel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:background="@drawable/edit_text_background"
-        android:layout_marginTop="8dp" />
-
-    <!-- Manufactured Year -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Manufactured Year"
-        android:textSize="16sp"
-        android:textColor="@color/black"
-        android:layout_marginTop="30dp" />
-
-    <EditText
-        android:id="@+id/etManufacturedYear"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter manufactured year"
-        android:inputType="number"
-        android:padding="12dp"
-        android:background="@drawable/edit_text_background"
-        android:layout_marginTop="8dp" />
-
-    <!-- Save Button -->
-    <Button
-        android:id="@+id/btnSaveVehicle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Save Vehicle"
-        android:backgroundTint="@color/black"
-        android:textColor="@color/yellow"
-        android:layout_marginTop="51dp" />
-
-    <!-- List to Display Vehicle Data -->
-    <ListView
-        android:id="@+id/lvVehicles"
+    <!-- ScrollView to make the form scrollable -->
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:layout_marginTop="16dp"
-        android:divider="@color/background_color"
-        android:dividerHeight="5dp"
-        android:background="@color/background_color"
-        android:padding="8dp" />
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="12dp"
+        android:padding="16dp"
+        android:background="@color/background_color">
 
-    <!-- Footer -->
     <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- Vehicle Registration Number -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Vehicle Registration Number"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:layout_marginTop="30dp" />
+
+            <EditText
+                android:id="@+id/etRegistrationNumber"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Enter registration number"
+                android:inputType="text"
+                android:padding="12dp"
+                android:background="@drawable/edit_text_background"
+                android:layout_marginTop="8dp" />
+
+            <!-- Vehicle Brand Dropdown -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Vehicle Brand"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:layout_marginTop="30dp" />
+
+            <Spinner
+                android:id="@+id/spinnerBrand"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:background="@drawable/edit_text_background"
+                android:layout_marginTop="8dp" />
+
+            <!-- Vehicle Model Dropdown -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Vehicle Model"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:layout_marginTop="30dp" />
+
+            <Spinner
+                android:id="@+id/spinnerModel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="12dp"
+                android:background="@drawable/edit_text_background"
+                android:layout_marginTop="8dp" />
+
+            <!-- Manufactured Year -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Manufactured Year"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:layout_marginTop="30dp" />
+
+            <EditText
+                android:id="@+id/etManufacturedYear"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Enter manufactured year"
+                android:inputType="number"
+                android:padding="12dp"
+                android:background="@drawable/edit_text_background"
+                android:layout_marginTop="8dp" />
+
+            <!-- Current Mileage (km) -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Current Mileage (km)"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:layout_marginTop="30dp" />
+
+            <EditText
+                android:id="@+id/etCurrentMileage"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Enter current mileage"
+                android:inputType="number"
+                android:padding="12dp"
+                android:background="@drawable/edit_text_background"
+                android:layout_marginTop="8dp" />
+
+            <!-- Weekly Riding Distance (km) -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Weekly Riding Distance (km)"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:layout_marginTop="30dp" />
+
+            <EditText
+                android:id="@+id/etWeeklyRidingDistance"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Enter weekly riding distance"
+                android:inputType="number"
+                android:padding="12dp"
+                android:background="@drawable/edit_text_background"
+                android:layout_marginTop="8dp" />
+
+        <!-- Save Button -->
+             <Button
+                 android:id="@+id/btnSaveVehicle"
+                 android:layout_width="match_parent"
+                 android:layout_height="wrap_content"
+                 android:text="Save Vehicle"
+                 android:backgroundTint="@color/black"
+                 android:textColor="@color/yellow"
+                 android:layout_marginTop="30dp"
+                 android:layout_marginBottom="30dp"/>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <include
+        layout="@layout/footer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="@color/black"
-        android:padding="16dp"
-        android:layout_marginTop="16dp">
+        android:layout_gravity="bottom"/>
 
-        <!-- Home -->
-        <LinearLayout
-            android:id="@+id/llHome"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/baseline_home_24"
-                android:contentDescription="Home icon" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Home"
-                android:textColor="@color/yellow"
-                android:textSize="14sp"
-                android:layout_marginTop="8dp" />
-        </LinearLayout>
-
-        <!-- Add Service Details -->
-        <LinearLayout
-            android:id="@+id/llAddService"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:orientation="vertical"
-            android:gravity="center">
-
-            <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:src="@drawable/baseline_car_repair_24"
-                android:contentDescription="Add Service icon" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Add Service"
-                android:textColor="@color/yellow"
-                android:textSize="14sp"
-                android:layout_marginTop="8dp" />
-        </LinearLayout>
-    </LinearLayout>
 
 </LinearLayout>

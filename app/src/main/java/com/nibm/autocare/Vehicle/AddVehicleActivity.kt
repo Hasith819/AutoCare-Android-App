@@ -20,6 +20,7 @@ import com.nibm.autocare.AddServiceActivity
 import com.nibm.autocare.HomeActivity
 import com.nibm.autocare.R
 
+
 class AddVehicleActivity : AppCompatActivity() {
 
     private lateinit var etRegistrationNumber: EditText
@@ -42,6 +43,7 @@ class AddVehicleActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_vehicle)
+
 
         // Initialize views
         etRegistrationNumber = findViewById(R.id.etRegistrationNumber)
@@ -90,6 +92,16 @@ class AddVehicleActivity : AppCompatActivity() {
         }
 
 
+
+        findViewById<View>(R.id.llHome).setOnClickListener {
+            val intent = Intent(this, HomeActivity::class.java)
+            startActivity(intent)
+        }
+
+        findViewById<View>(R.id.llAddVehicle).setOnClickListener {
+            val intent = Intent(this, AddVehicleActivity::class.java)
+            startActivity(intent)
+        }
 
         findViewById<View>(R.id.llAddService).setOnClickListener {
             val intent = Intent(this, AddServiceActivity::class.java)

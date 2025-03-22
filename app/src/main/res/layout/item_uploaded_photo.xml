@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="8dp">
+
+    <!-- ImageView to Display Uploaded Photo -->
+    <ImageView
+        android:id="@+id/ivUploadedPhoto"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:scaleType="centerCrop"
+        android:background="@color/light_gray"
+        android:contentDescription="Uploaded Photo" />
+
+    <!-- Button to Remove Photo -->
+    <Button
+        android:id="@+id/btnRemovePhoto"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Remove"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/black"
+        android:layout_marginTop="8dp"
+        android:layout_gravity="center_horizontal" />
+</LinearLayout>
