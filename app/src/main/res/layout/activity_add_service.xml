@@ -99,6 +99,7 @@
                 android:background="@drawable/edit_text_background"
                 android:layout_marginTop="8dp" />
 
+
             <!-- Dropdown to Select Service Type -->
             <TextView
                 android:layout_width="match_parent"
@@ -116,6 +117,8 @@
                 android:background="@drawable/edit_text_background"
                 android:layout_marginTop="8dp" />
 
+
+
             <!-- Checklist for Services -->
             <TextView
                 android:layout_width="match_parent"
@@ -129,7 +132,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:layout_marginTop="8dp">
+                android:layout_marginTop="10dp">
 
                 <CheckBox
                     android:id="@+id/cbEngineOilChange"
@@ -186,11 +189,50 @@
                     android:text="Plug Replace" />
             </LinearLayout>
 
+
+            <!-- Service Cost -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Service Cost (Rs.)"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:layout_marginTop="16dp" />
+
+            <EditText
+                android:id="@+id/etServiceCost"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Enter cost"
+                android:inputType="numberDecimal"
+                android:padding="12dp"
+                android:background="@drawable/edit_text_background"
+                android:layout_marginTop="8dp" />
+
+            <!-- Service Notes -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Additional Notes"
+                android:textSize="16sp"
+                android:textColor="@color/black"
+                android:layout_marginTop="16dp" />
+
+            <EditText
+                android:id="@+id/etServiceNotes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Enter notes"
+                android:inputType="textMultiLine"
+                android:padding="12dp"
+                android:background="@drawable/edit_text_background"
+                android:layout_marginTop="8dp" />
+
             <!-- Photo Upload Section -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Upload Photos (Bills)"
+                android:text="Upload Bills"
                 android:textSize="16sp"
                 android:textColor="@color/black"
                 android:layout_marginTop="16dp" />
