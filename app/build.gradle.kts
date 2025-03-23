@@ -79,5 +79,7 @@ dependencies {
 
     implementation ("com.cloudinary:cloudinary-android:2.3.1")
 
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
+
 
 }
