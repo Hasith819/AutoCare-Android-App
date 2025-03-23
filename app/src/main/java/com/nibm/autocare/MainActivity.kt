@@ -12,12 +12,12 @@ class MainActivity : AppCompatActivity() {
 
 
 
-        val intent = Intent(this, SplashActivity::class.java)
-        startActivity(intent)
-        finish()
-
-//        val intent = Intent(this, AddServiceActivity::class.java)
+//        val intent = Intent(this, SplashActivity::class.java)
 //        startActivity(intent)
 //        finish()
+
+        val intent = Intent(this, AddServiceActivity::class.java)
+        startActivity(intent)
+        finish()
     }
 }

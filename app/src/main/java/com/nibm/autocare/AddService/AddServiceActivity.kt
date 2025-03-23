@@ -17,7 +17,11 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.*
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.storage.FirebaseStorage
 import com.nibm.autocare.Vehicle.AddVehicleActivity
 import com.nibm.autocare.adapter.UploadedPhotosAdapter
 import java.text.SimpleDateFormat
@@ -29,6 +33,9 @@ class AddServiceActivity : AppCompatActivity() {
     private lateinit var spinnerServiceType: Spinner
     private lateinit var spinnerVehicle: Spinner
     private lateinit var etServiceDate: EditText
+    private lateinit var etOdometerReading: EditText
+    private lateinit var etServiceCost: EditText
+    private lateinit var etServiceNotes: EditText
     private lateinit var cbEngineOilChange: CheckBox
     private lateinit var cbOilFilterReplace: CheckBox
     private lateinit var cbFluidLevelChecks: CheckBox
@@ -49,10 +56,12 @@ class AddServiceActivity : AppCompatActivity() {
     private lateinit var cbDriveBeltReplacement: CheckBox
     private lateinit var cbFuelSystemService: CheckBox
     private lateinit var rvUploadedPhotos: RecyclerView
+    private lateinit var btnSave: Button
 
     // Firebase
     private lateinit var auth: FirebaseAuth
     private lateinit var database: FirebaseDatabase
+    private lateinit var storage: FirebaseStorage
 
     // Adapter for uploaded photos
     private lateinit var uploadedPhotosAdapter: UploadedPhotosAdapter
@@ -101,14 +110,18 @@ class AddServiceActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_service)
 
-        // Initialize Firebase Auth and Database
+        // Initialize Firebase Auth, Database, and Storage
         auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance()
+        storage = FirebaseStorage.getInstance()
 
         // Initialize UI components
         spinnerServiceType = findViewById(R.id.spinnerServiceType)
         spinnerVehicle = findViewById(R.id.spinnerVehicle)
         etServiceDate = findViewById(R.id.etServiceDate)
+        etOdometerReading = findViewById(R.id.etOdometerReading)
+        etServiceCost = findViewById(R.id.etServiceCost)
+        etServiceNotes = findViewById(R.id.etServiceNotes)
         cbEngineOilChange = findViewById(R.id.cbEngineOilChange)
         cbOilFilterReplace = findViewById(R.id.cbOilFilterReplace)
         cbFluidLevelChecks = findViewById(R.id.cbFluidLevelChecks)
@@ -129,6 +142,7 @@ class AddServiceActivity : AppCompatActivity() {
         cbDriveBeltReplacement = findViewById(R.id.cbDriveBeltReplacement)
         cbFuelSystemService = findViewById(R.id.cbFuelSystemService)
         rvUploadedPhotos = findViewById(R.id.rvUploadedPhotos)
+        btnSave = findViewById(R.id.btnSave)
 
         // Set up RecyclerView for uploaded photos
         uploadedPhotosAdapter = UploadedPhotosAdapter(uploadedPhotos) { position ->
@@ -146,7 +160,6 @@ class AddServiceActivity : AppCompatActivity() {
         findViewById<View>(R.id.llAddVehicle).setOnClickListener {
             startActivity(Intent(this, AddVehicleActivity::class.java))
         }
-
 
         // Fetch and populate the logged-in user's vehicles
         fetchUserVehicles()
@@ -169,6 +182,11 @@ class AddServiceActivity : AppCompatActivity() {
             } else {
                 openCamera()
             }
+        }
+
+        // Set up save button
+        btnSave.setOnClickListener {
+            saveServiceData()
         }
     }
 
@@ -346,5 +364,146 @@ class AddServiceActivity : AppCompatActivity() {
                 calendar.get(Calendar.DAY_OF_MONTH)
             ).show()
         }
+    }
+
+    // Validate mandatory fields
+    private fun validateInputs(): Boolean {
+        val date = etServiceDate.text.toString().trim()
+        val odometerReading = etOdometerReading.text.toString().trim()
+        val serviceCost = etServiceCost.text.toString().trim()
+        val checkedItems = getCheckedItems()
+
+        return when {
+            date.isEmpty() -> {
+                Toast.makeText(this, "Please select a date", Toast.LENGTH_SHORT).show()
+                false
+            }
+            odometerReading.isEmpty() -> {
+                Toast.makeText(this, "Please enter odometer reading", Toast.LENGTH_SHORT).show()
+                false
+            }
+            serviceCost.isEmpty() -> {
+                Toast.makeText(this, "Please enter service cost", Toast.LENGTH_SHORT).show()
+                false
+            }
+            checkedItems.size < 3 -> {
+                Toast.makeText(this, "Please select at least 3 services", Toast.LENGTH_SHORT).show()
+                false
+            }
+            else -> true
+        }
+    }
+
+    // Get checked items from the checklist
+    private fun getCheckedItems(): List<String> {
+        val checkedItems = mutableListOf<String>()
+        if (cbEngineOilChange.isChecked) checkedItems.add("Engine Oil Change")
+        if (cbOilFilterReplace.isChecked) checkedItems.add("Oil Filter Replace")
+        if (cbFluidLevelChecks.isChecked) checkedItems.add("Fluid Level Checks")
+        if (cbTireInspection.isChecked) checkedItems.add("Tire Inspection")
+        if (cbBrakeSystemCheck.isChecked) checkedItems.add("Brake System Check")
+        if (cbLightsElectricalsCheck.isChecked) checkedItems.add("Lights and Electricals Check")
+        if (cbAirFilterInspection.isChecked) checkedItems.add("Air Filter Inspection")
+        if (cbWheelAlignmentCheck.isChecked) checkedItems.add("Wheel Alignment Check")
+        if (cbCabinFilterChange.isChecked) checkedItems.add("Cabin Filter Change")
+        if (cbFuelFilterInspection.isChecked) checkedItems.add("Fuel Filter Inspection")
+        if (cbBrakeFluidFlush.isChecked) checkedItems.add("Brake Fluid Flush")
+        if (cbCoolantFluidFlush.isChecked) checkedItems.add("Coolant Fluid Flush")
+        if (cbTransmissionOilChange.isChecked) checkedItems.add("Transmission Oil Change")
+        if (cbAirConditioningSystemCheck.isChecked) checkedItems.add("Air Conditioning System Check")
+        if (cbTimingBeltChainReplacement.isChecked) checkedItems.add("Timing Belt/Chain Replacement")
+        if (cbSparkPlugReplacement.isChecked) checkedItems.add("Spark Plug Replacement")
+        if (cbSuspensionComponentCheck.isChecked) checkedItems.add("Suspension Component Check")
+        if (cbDriveBeltReplacement.isChecked) checkedItems.add("Drive Belt Replacement")
+        if (cbFuelSystemService.isChecked) checkedItems.add("Fuel System Service")
+        return checkedItems
+    }
+
+    // Save service data to Firebase
+    private fun saveServiceData() {
+        if (!validateInputs()) return
+
+        val currentUser = auth.currentUser
+        if (currentUser == null) {
+            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val userId = currentUser.uid
+        val registrationNumber = spinnerVehicle.selectedItem.toString()
+        val date = etServiceDate.text.toString().trim()
+        val odometerReading = etOdometerReading.text.toString().trim()
+        val serviceType = spinnerServiceType.selectedItem.toString()
+        val serviceCost = etServiceCost.text.toString().trim()
+        val notes = etServiceNotes.text.toString().trim()
+        val checkedItems = getCheckedItems()
+
+        // Create a service data map
+        val serviceData = hashMapOf(
+            "date" to date,
+            "odometerReading" to odometerReading,
+            "serviceType" to serviceType,
+            "serviceCost" to serviceCost,
+            "notes" to notes,
+            "checkedItems" to checkedItems
+        )
+
+        // Save to Firebase Realtime Database
+        val serviceRef = database.reference.child("users_services")
+            .child(userId)
+            .child(registrationNumber)
+            .child(date.replace("/", "-")) // Use date as a unique key
+
+        serviceRef.setValue(serviceData)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Service data saved successfully", Toast.LENGTH_SHORT).show()
+                if (uploadedPhotos.isNotEmpty()) {
+                    uploadPhotos(userId, registrationNumber, date.replace("/", "-"))
+                } else {
+                    finish() // Close the activity after saving
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to save service data: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    // Upload photos to Firebase Storage
+    private fun uploadPhotos(userId: String, registrationNumber: String, dateKey: String) {
+        val storageRef = storage.reference
+        val photoUrls = mutableListOf<String>()
+
+        uploadedPhotos.forEachIndexed { index, uri ->
+            val photoRef = storageRef.child("service_photos/$userId/$registrationNumber/$dateKey/photo_$index.jpg")
+            photoRef.putFile(uri)
+                .addOnSuccessListener {
+                    photoRef.downloadUrl.addOnSuccessListener { downloadUri ->
+                        photoUrls.add(downloadUri.toString())
+                        if (photoUrls.size == uploadedPhotos.size) {
+                            savePhotoUrls(userId, registrationNumber, dateKey, photoUrls)
+                        }
+                    }
+                }
+                .addOnFailureListener {
+                    Toast.makeText(this, "Failed to upload photo: ${it.message}", Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
+    // Save photo URLs to Firebase Realtime Database
+    private fun savePhotoUrls(userId: String, registrationNumber: String, dateKey: String, photoUrls: List<String>) {
+        val serviceRef = database.reference.child("users_services")
+            .child(userId)
+            .child(registrationNumber)
+            .child(dateKey)
+
+        serviceRef.child("photoUrls").setValue(photoUrls)
+            .addOnSuccessListener {
+                Toast.makeText(this, "Photos uploaded successfully", Toast.LENGTH_SHORT).show()
+                finish() // Close the activity after saving
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to save photo URLs: ${it.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 }
