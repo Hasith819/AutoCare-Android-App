@@ -11,13 +11,16 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
 
-
-//        val intent = Intent(this, SplashActivity::class.java)
+//        val intent = Intent(this, TestActivity::class.java)
 //        startActivity(intent)
 //        finish()
 
-        val intent = Intent(this, AddServiceActivity::class.java)
+        val intent = Intent(this, SplashActivity::class.java)
         startActivity(intent)
         finish()
+
+//        val intent = Intent(this, AddServiceActivity::class.java)
+//        startActivity(intent)
+//        finish()
     }
 }

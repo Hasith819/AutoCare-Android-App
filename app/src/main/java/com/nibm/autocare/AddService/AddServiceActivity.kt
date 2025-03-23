@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
@@ -16,12 +17,14 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.cloudinary.android.MediaManager
+import com.cloudinary.android.callback.ErrorInfo
+import com.cloudinary.android.callback.UploadCallback
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.storage.FirebaseStorage
 import com.nibm.autocare.Vehicle.AddVehicleActivity
 import com.nibm.autocare.adapter.UploadedPhotosAdapter
 import java.text.SimpleDateFormat
@@ -61,7 +64,6 @@ class AddServiceActivity : AppCompatActivity() {
     // Firebase
     private lateinit var auth: FirebaseAuth
     private lateinit var database: FirebaseDatabase
-    private lateinit var storage: FirebaseStorage
 
     // Adapter for uploaded photos
     private lateinit var uploadedPhotosAdapter: UploadedPhotosAdapter
@@ -110,10 +112,16 @@ class AddServiceActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_service)
 
-        // Initialize Firebase Auth, Database, and Storage
+        // Initialize Firebase Auth and Database
         auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance()
-        storage = FirebaseStorage.getInstance()
+
+        // Initialize Cloudinary
+//        val config = HashMap<String, String>()
+//        config["cloud_name"] = "dt2vnetaw"
+//        config["api_key"] = "819723664299813"
+//        config["api_secret"] = "wR2kaZn98ektecTnPLt0c9bBpwo"
+//        MediaManager.init(this, config)
 
         // Initialize UI components
         spinnerServiceType = findViewById(R.id.spinnerServiceType)
@@ -456,10 +464,10 @@ class AddServiceActivity : AppCompatActivity() {
 
         serviceRef.setValue(serviceData)
             .addOnSuccessListener {
-                Toast.makeText(this, "Service data saved successfully", Toast.LENGTH_SHORT).show()
                 if (uploadedPhotos.isNotEmpty()) {
-                    uploadPhotos(userId, registrationNumber, date.replace("/", "-"))
+                    uploadPhotosToCloudinary(userId, registrationNumber, date.replace("/", "-"))
                 } else {
+                    Toast.makeText(this, "Service data saved successfully", Toast.LENGTH_SHORT).show()
                     finish() // Close the activity after saving
                 }
             }
@@ -468,25 +476,40 @@ class AddServiceActivity : AppCompatActivity() {
             }
     }
 
-    // Upload photos to Firebase Storage
-    private fun uploadPhotos(userId: String, registrationNumber: String, dateKey: String) {
-        val storageRef = storage.reference
+    // Upload photos to Cloudinary and save URLs to Firebase
+    private fun uploadPhotosToCloudinary(userId: String, registrationNumber: String, dateKey: String) {
         val photoUrls = mutableListOf<String>()
-
         uploadedPhotos.forEachIndexed { index, uri ->
-            val photoRef = storageRef.child("service_photos/$userId/$registrationNumber/$dateKey/photo_$index.jpg")
-            photoRef.putFile(uri)
-                .addOnSuccessListener {
-                    photoRef.downloadUrl.addOnSuccessListener { downloadUri ->
-                        photoUrls.add(downloadUri.toString())
+            MediaManager.get().upload(uri)
+                .option("folder", "Home/AutoCare")
+                .option("public_id", "service_${userId}_${registrationNumber}_${dateKey}_$index")
+                .callback(object : UploadCallback {
+                    override fun onStart(requestId: String) {
+                        Log.d("Cloudinary", "Upload started")
+                    }
+
+                    override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {
+                        Log.d("Cloudinary", "Upload in progress: $bytes/$totalBytes")
+                    }
+
+                    override fun onSuccess(requestId: String, resultData: Map<*, *>) {
+                        val imageUrl = resultData["url"].toString()
+                        photoUrls.add(imageUrl)
                         if (photoUrls.size == uploadedPhotos.size) {
                             savePhotoUrls(userId, registrationNumber, dateKey, photoUrls)
                         }
                     }
-                }
-                .addOnFailureListener {
-                    Toast.makeText(this, "Failed to upload photo: ${it.message}", Toast.LENGTH_SHORT).show()
-                }
+
+                    override fun onError(requestId: String, error: ErrorInfo) {
+                        Log.e("Cloudinary", "Upload failed: ${error.description}")
+                        Toast.makeText(this@AddServiceActivity, "Upload failed: ${error.description}", Toast.LENGTH_SHORT).show()
+                    }
+
+                    override fun onReschedule(requestId: String, error: ErrorInfo) {
+                        Log.d("Cloudinary", "Upload rescheduled")
+                    }
+                })
+                .dispatch()
         }
     }
 

@@ -1,98 +1,113 @@
 package com.nibm.autocare
 
-import android.os.AsyncTask
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.widget.Button
-import android.widget.EditText
+import android.widget.ImageView
+import android.widget.ProgressBar
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import java.util.Properties
-import javax.mail.Authenticator
-import javax.mail.Message
-import javax.mail.MessagingException
-import javax.mail.PasswordAuthentication
-import javax.mail.Session
-import javax.mail.Transport
-import javax.mail.internet.InternetAddress
-import javax.mail.internet.MimeMessage
+import com.bumptech.glide.Glide
+import com.cloudinary.android.MediaManager
+import com.cloudinary.android.callback.ErrorInfo
+import com.cloudinary.android.callback.UploadCallback
+import java.util.HashMap
 
 class TestActivity : AppCompatActivity() {
 
-    private lateinit var etRecipientEmail: EditText
-    private lateinit var etEmailBody: EditText
-    private lateinit var btnSendEmail: Button
+    private lateinit var imageView: ImageView
+    private lateinit var selectImageButton: Button
+    private lateinit var uploadButton: Button
+    private lateinit var urlTextView: TextView
+    private lateinit var uploadProgressBar: ProgressBar
+    private var selectedImageUri: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_test)
 
         // Initialize views
-        etRecipientEmail = findViewById(R.id.etRecipientEmail)
-        etEmailBody = findViewById(R.id.etEmailBody)
-        btnSendEmail = findViewById(R.id.btnSendEmail)
+        imageView = findViewById(R.id.imageView)
+        selectImageButton = findViewById(R.id.selectImageButton)
+        uploadButton = findViewById(R.id.uploadButton)
+        urlTextView = findViewById(R.id.urlTextView)
+        uploadProgressBar = findViewById(R.id.uploadProgressBar)
 
-        // Set up send email button click listener
-        btnSendEmail.setOnClickListener {
-            val recipientEmail = etRecipientEmail.text.toString().trim()
+        // Initialize Cloudinary
+        val config = HashMap<String, String>()
+        config["cloud_name"] = "dt2vnetaw" // Replace with your Cloud Name
+        config["api_key"] = "819723664299813" // Replace with your API Key
+        config["api_secret"] = "wR2kaZn98ektecTnPLt0c9bBpwo"
+        MediaManager.init(this, config)
 
-            if (recipientEmail.isEmpty()) {
-                Toast.makeText(this, "Please enter recipient email", Toast.LENGTH_SHORT).show()
+        // Button to select an image from the gallery
+        selectImageButton.setOnClickListener {
+            val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+            startActivityForResult(intent, PICK_IMAGE_REQUEST)
+        }
+
+        // Button to upload the selected image to Cloudinary
+        uploadButton.setOnClickListener {
+            if (selectedImageUri != null) {
+                uploadImageToCloudinary(selectedImageUri!!)
             } else {
-                // Send email in the background
-                SendEmailTask().execute(recipientEmail)
+                Toast.makeText(this, "Please select an image first", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    // AsyncTask to send email in the background
-    private inner class SendEmailTask : AsyncTask<String, Void, String>() {
+    // Handle the result of image selection
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == PICK_IMAGE_REQUEST && resultCode == Activity.RESULT_OK && data != null) {
+            selectedImageUri = data.data
+            Glide.with(this).load(selectedImageUri).into(imageView)
+        }
+    }
 
-        override fun doInBackground(vararg params: String): String {
-            val recipientEmail = params[0]
-            val emailBody = "This is a hardcoded message sent from the AutoCare app."
+    // Upload the image to Cloudinary
+    private fun uploadImageToCloudinary(imageUri: Uri) {
+        MediaManager.get().upload(imageUri)
+            .option("folder", "Home/AutoCare") // Save to the "Home/AutoCare" folder
+            .option("public_id", "unique_image_name_${System.currentTimeMillis()}") // Unique public ID
+            .callback(object : UploadCallback {
+                override fun onStart(requestId: String) {
+                    Log.d("Cloudinary", "Upload started")
+                    uploadProgressBar.progress = 0 // Reset progress bar
+                }
 
-            // Sender's email credentials
-            val senderEmail = "hasithpubudu@gmail.com" // Replace with your Gmail address
-            val senderPassword = "buyf seft oeao ywnj" // Replace with your 16-digit App Password
+                override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {
+                    val progress = ((bytes * 100) / totalBytes).toInt()
+                    uploadProgressBar.progress = progress // Update progress bar
+                    Log.d("Cloudinary", "Upload in progress: $progress%")
+                }
 
-            // Set up mail server properties
-            val properties = Properties()
-            properties["mail.smtp.host"] = "smtp.gmail.com"
-            properties["mail.smtp.port"] = "587"
-            properties["mail.smtp.auth"] = "true"
-            properties["mail.smtp.starttls.enable"] = "true"
+                override fun onSuccess(requestId: String, resultData: Map<*, *>) {
+                    val imageUrl = resultData["url"].toString()
+                    Log.d("Cloudinary", "Upload successful. URL: $imageUrl")
+                    urlTextView.text = imageUrl
+                    uploadProgressBar.progress = 100 // Set progress to 100%
+                    Toast.makeText(this@TestActivity, "Upload successful!", Toast.LENGTH_SHORT).show()
+                }
 
-            // Create a session with authentication
-            val session = Session.getInstance(properties, object : Authenticator() {
-                override fun getPasswordAuthentication(): PasswordAuthentication {
-                    return PasswordAuthentication(senderEmail, senderPassword)
+                override fun onError(requestId: String, error: ErrorInfo) {
+                    Log.e("Cloudinary", "Upload failed: ${error.description}")
+                    Toast.makeText(this@TestActivity, "Upload failed: ${error.description}", Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onReschedule(requestId: String, error: ErrorInfo) {
+                    Log.d("Cloudinary", "Upload rescheduled")
                 }
             })
+            .dispatch()
+    }
 
-            try {
-                // Create a MimeMessage
-                val message = MimeMessage(session)
-                message.setFrom(InternetAddress(senderEmail))
-                message.addRecipient(Message.RecipientType.TO, InternetAddress(recipientEmail))
-                message.subject = "Test Email from AutoCare"
-                message.setText(emailBody)
-
-                // Send the email
-                Transport.send(message)
-                return "Email sent successfully to $recipientEmail"
-            } catch (e: MessagingException) {
-                Log.e("SendEmailTask", "Failed to send email", e)
-                return "Failed to send email: ${e.message}"
-            } catch (e: Exception) {
-                Log.e("SendEmailTask", "Unexpected error", e)
-                return "Unexpected error: ${e.message}"
-            }
-        }
-
-        override fun onPostExecute(result: String) {
-            Toast.makeText(this@TestActivity, result, Toast.LENGTH_SHORT).show()
-            Log.d("SendEmailTask", result) // Log the result to Logcat
-        }
+    companion object {
+        private const val PICK_IMAGE_REQUEST = 100
     }
 }
