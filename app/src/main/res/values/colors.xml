@@ -13,4 +13,10 @@
     <color name="dark_gray">#555555</color>
     <color name="light_gray">#DDDDDD</color>
     <color name="green">#4CAF50</color>
+
+    <color name="gray_300">#E0E0E0</color>
+    <color name="gray_500">#9E9E9E</color>
+    <color name="red_400">#EF5350</color>
+
+    <color name="low_yellow">#A08220</color>
 </resources>
