@@ -2,39 +2,53 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
+    android:orientation="horizontal"
     android:padding="16dp"
-    android:background="@color/yellow">
+    android:background="@color/yellow"
+    android:layout_marginBottom="8dp"
+    android:elevation="4dp">
 
-    <!-- Service Date -->
+    <!-- Left Column - Odometer Reading -->
     <TextView
-        android:id="@+id/tvServiceDate"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Service Date: 2023-10-01"
+        android:id="@+id/tvOdometerReading"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:text="12345 km"
         android:textSize="18sp"
         android:textColor="@color/black"
         android:textStyle="bold"
+        android:gravity="center_vertical"
         android:padding="8dp" />
 
-    <!-- Service Description -->
-    <TextView
-        android:id="@+id/tvServiceDescription"
-        android:layout_width="match_parent"
+    <!-- Right Column - Date and Cost -->
+    <LinearLayout
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Description: Oil Change"
-        android:textSize="16sp"
-        android:textColor="@color/black"
-        android:padding="8dp" />
+        android:layout_weight="1"
+        android:orientation="vertical">
 
-    <!-- Service Cost -->
-    <TextView
-        android:id="@+id/tvServiceCost"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Cost: $50.00"
-        android:textSize="16sp"
-        android:textColor="@color/black"
-        android:padding="8dp" />
+        <!-- Service Date -->
+        <TextView
+            android:id="@+id/tvServiceDate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="2023-10-01"
+            android:textSize="18sp"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:padding="8dp"
+            android:gravity="end" />
 
+        <!-- Service Cost -->
+        <TextView
+            android:id="@+id/tvServiceCost"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Cost: Rs 50.00"
+            android:textSize="16sp"
+            android:textColor="@color/black"
+            android:padding="8dp"
+            android:gravity="end" />
+    </LinearLayout>
 </LinearLayout>

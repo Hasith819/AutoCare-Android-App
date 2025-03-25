@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.BaseAdapter
 import android.widget.ListView
 import android.widget.PopupMenu
@@ -21,6 +22,8 @@ import com.nibm.autocare.Authentication.LoginActivity
 import com.nibm.autocare.Vehicle.AddVehicleActivity
 
 class HomeActivity : AppCompatActivity() {
+
+    private val vehicleList = mutableListOf<Vehicle>()
 
     private lateinit var tvGreeting: TextView
     private lateinit var lvVehicles: ListView
@@ -61,6 +64,16 @@ class HomeActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+
+        // Set click listener for vehicle items
+        lvVehicles.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
+            val selectedVehicle = vehicleList[position]
+            val intent = Intent(this, ServiceRecordActivity::class.java).apply {
+                putExtra("vehicleRegistration", selectedVehicle.registrationNumber)
+            }
+            startActivity(intent)
+        }
+
     }
 
     // Fetch username from Firebase Realtime Database
@@ -96,7 +109,7 @@ class HomeActivity : AppCompatActivity() {
 
             vehiclesRef.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    val vehicleList = mutableListOf<Vehicle>()
+                    vehicleList.clear() // Clear existing items
                     for (vehicleSnapshot in snapshot.children) {
                         val registrationNumber = vehicleSnapshot.child("registrationNumber").getValue(String::class.java)
                         val brand = vehicleSnapshot.child("brand").getValue(String::class.java)
@@ -109,7 +122,6 @@ class HomeActivity : AppCompatActivity() {
                         }
                     }
 
-                    // Populate the ListView with a custom adapter
                     val adapter = VehicleAdapter(vehicleList)
                     lvVehicles.adapter = adapter
                 }
