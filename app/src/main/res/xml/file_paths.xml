@@ -3,4 +3,5 @@
     <external-path name="external_files" path="." />
     <external-path name="my_images" path="Android/data/com.nibm.autocare/files/Pictures"/>
     <external-files-path name="my_images" path="Pictures" />
+    <external-path name="external_files" path="."/>
 </paths>

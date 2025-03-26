@@ -19,4 +19,8 @@
     <color name="red_400">#EF5350</color>
 
     <color name="low_yellow">#A08220</color>
+
+
+    <color name="dark_yellow">#FFA000</color>
+    <color name="light_yelloww">#40FFECB3</color>
 </resources>

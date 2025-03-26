@@ -3,4 +3,5 @@
     <string name="select_vehicle_prompt">Select Vehicle</string>
     <string name="select_service_date">Select Service Date</string>
     <string name="select_service_type_prompt">Select Service Type</string>
+    <string name="download_pdf">Download PDF</string>
 </resources>

@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/white">
 
-
-
-    <!-- Header with App Name and Menu Icon -->
+    <!-- Header with App Name -->
     <LinearLayout
+        android:id="@+id/header"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/black"
@@ -16,36 +15,50 @@
         android:gravity="center"
         android:orientation="horizontal">
 
-        <!-- App Name -->
         <TextView
             android:id="@+id/tvAppName"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
             android:text="Service Records"
             android:textColor="@color/yellow"
             android:textSize="24sp"
             android:textStyle="bold"
-            android:gravity="center" />
+            android:gravity="center"/>
     </LinearLayout>
 
     <!-- List to Display Vehicle Data -->
     <ListView
         android:id="@+id/lvServiceRecords"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:layout_marginTop="16dp"
+        android:layout_height="match_parent"
+        android:layout_above="@id/footer"
+        android:layout_below="@id/header"
         android:divider="@color/background_color"
         android:dividerHeight="5dp"
         android:background="@color/background_color"
-        android:padding="16dp" />
+        android:padding="16dp"/>
 
+    <!-- PDF Download Button - Bottom Right -->
+    <ImageButton
+        android:id="@+id/btnDownloadPdf"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_above="@id/footer"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/rounded_button_bg"
+        android:contentDescription="@string/download_pdf"
+        android:elevation="8dp"
+        android:src="@drawable/ic_pdf_download"
+        android:stateListAnimator="@null"/>
 
+    <!-- Footer -->
     <include
+        android:id="@+id/footer"
         layout="@layout/footer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom"/>
+        android:layout_alignParentBottom="true"/>
 
-</LinearLayout>
+</RelativeLayout>
