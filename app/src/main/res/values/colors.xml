@@ -22,5 +22,7 @@
 
 
     <color name="dark_yellow">#FFA000</color>
-    <color name="light_yelloww">#40FFECB3</color>
+
+    <color name="red">#F44336</color>
+
 </resources>

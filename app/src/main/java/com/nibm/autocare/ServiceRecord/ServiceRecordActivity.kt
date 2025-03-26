@@ -5,20 +5,12 @@ import android.app.Dialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.BaseAdapter
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.ListView
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -26,15 +18,14 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.*
 import com.nibm.autocare.Vehicle.AddVehicleActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.*
 
 class ServiceRecordActivity : AppCompatActivity() {
 
@@ -43,7 +34,8 @@ class ServiceRecordActivity : AppCompatActivity() {
     private lateinit var database: FirebaseDatabase
     private lateinit var vehicleRegistration: String
     private lateinit var pdfGenerator: PdfGenerator
-    private var currentServiceRecords = listOf<ServiceRecord>()
+    private lateinit var servicesRef: DatabaseReference
+    private var currentServiceRecords = mutableListOf<ServiceRecord>()
 
     companion object {
         private const val STORAGE_PERMISSION_CODE = 1001
@@ -51,30 +43,31 @@ class ServiceRecordActivity : AppCompatActivity() {
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE
         )
+        private const val DELETE_CONFIRMATION = 1
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_service_record)
 
-        // Initialize components
+        initializeComponents()
+        setupClickListeners()
+        fetchServiceRecords()
+    }
+
+    private fun initializeComponents() {
         auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance()
         pdfGenerator = PdfGenerator(this)
-
-        // Get vehicle registration from intent
         vehicleRegistration = intent.getStringExtra("vehicleRegistration") ?: ""
-
-        // Set title
         findViewById<TextView>(R.id.tvAppName).text = "Services for $vehicleRegistration"
-
-        // Initialize views
         lvServiceRecords = findViewById(R.id.lvServiceRecords)
 
-        // Fetch service records
-        fetchServiceRecords()
+        val currentUser = auth.currentUser
+        servicesRef = database.reference.child("users_services").child(currentUser?.uid ?: "").child(vehicleRegistration)
+    }
 
-        // Set click listeners
+    private fun setupClickListeners() {
         findViewById<View>(R.id.llHome).setOnClickListener {
             startActivity(Intent(this, HomeActivity::class.java))
         }
@@ -89,59 +82,73 @@ class ServiceRecordActivity : AppCompatActivity() {
 
         findViewById<View>(R.id.btnDownloadPdf).setOnClickListener {
             if (currentServiceRecords.isEmpty()) {
-                Toast.makeText(this, "No service records to export", Toast.LENGTH_SHORT).show()
+                showToast("No service records to export")
                 return@setOnClickListener
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                // Android 11+ - use MediaStore or app-specific storage
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R || hasStoragePermissions()) {
                 generateAndDownloadPdf()
             } else {
-                // Check for storage permissions
-                if (hasStoragePermissions()) {
-                    generateAndDownloadPdf()
-                } else {
-                    requestStoragePermissions()
-                }
+                requestStoragePermissions()
             }
         }
     }
 
     private fun fetchServiceRecords() {
-        val currentUser = auth.currentUser ?: return
-        val userId = currentUser.uid
-        val servicesRef = database.reference.child("users_services").child(userId).child(vehicleRegistration)
-
         servicesRef.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val serviceList = mutableListOf<ServiceRecord>()
+                currentServiceRecords.clear()
                 for (serviceSnapshot in snapshot.children) {
-                    val date = serviceSnapshot.child("date").getValue(String::class.java)
-                    val odometerReading = serviceSnapshot.child("odometerReading").getValue(String::class.java)
-                    val serviceCost = serviceSnapshot.child("serviceCost").getValue(String::class.java)
-                    val serviceType = serviceSnapshot.child("serviceType").getValue(String::class.java)
-                    val checkedItems = serviceSnapshot.child("checkedItems").children.map { it.getValue(String::class.java) }.filterNotNull()
-                    val notes = serviceSnapshot.child("notes").getValue(String::class.java)
-                    val photoUrls = serviceSnapshot.child("photoUrls").children.map { it.getValue(String::class.java) }.filterNotNull()
-
-                    if (date != null && odometerReading != null && serviceCost != null) {
-                        serviceList.add(ServiceRecord(
-                            date, odometerReading, serviceCost,
-                            serviceType, checkedItems, notes, photoUrls
-                        ))
+                    parseServiceRecord(serviceSnapshot)?.let {
+                        currentServiceRecords.add(it)
                     }
                 }
-
-                currentServiceRecords = serviceList.sortedByDescending { it.date }
+                currentServiceRecords.sortByDescending { it.date }
                 lvServiceRecords.adapter = ServiceRecordAdapter(currentServiceRecords, this@ServiceRecordActivity)
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Toast.makeText(this@ServiceRecordActivity,
-                    "Failed to fetch services: ${error.message}",
-                    Toast.LENGTH_SHORT).show()
+                showToast("Failed to fetch services: ${error.message}")
             }
         })
+    }
+
+    private fun parseServiceRecord(serviceSnapshot: DataSnapshot): ServiceRecord? {
+        return try {
+            val date = serviceSnapshot.child("date").getValue(String::class.java) ?: return null
+            val odometerReading = serviceSnapshot.child("odometerReading").getValue(String::class.java) ?: return null
+            val serviceCost = serviceSnapshot.child("serviceCost").getValue(String::class.java) ?: return null
+            val serviceType = serviceSnapshot.child("serviceType").getValue(String::class.java)
+            val checkedItems = serviceSnapshot.child("checkedItems").children.mapNotNull { it.getValue(String::class.java) }
+            val notes = serviceSnapshot.child("notes").getValue(String::class.java)
+            val photoUrls = serviceSnapshot.child("photoUrls").children.mapNotNull { it.getValue(String::class.java) }
+            val recordId = serviceSnapshot.key ?: ""
+
+            ServiceRecord(date, odometerReading, serviceCost, serviceType, checkedItems, notes, photoUrls, recordId)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    private fun deleteServiceRecord(recordId: String) {
+        servicesRef.child(recordId).removeValue()
+            .addOnSuccessListener {
+                showToast("Service record deleted successfully")
+            }
+            .addOnFailureListener {
+                showToast("Failed to delete service record")
+            }
+    }
+
+    private fun showDeleteConfirmation(recordId: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Delete Service Record")
+            .setMessage("Are you sure you want to delete this service record?")
+            .setPositiveButton("Delete") { _, _ ->
+                deleteServiceRecord(recordId)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     private fun generateAndDownloadPdf() {
@@ -240,16 +247,6 @@ class ServiceRecordActivity : AppCompatActivity() {
             .show()
     }
 
-    // Data class and Adapter remain the same as in your original code
-    data class ServiceRecord(
-        val date: String,
-        val odometerReading: String,
-        val serviceCost: String,
-        val serviceType: String? = null,
-        val checkedItems: List<String>? = null,
-        val notes: String? = null,
-        val photoUrls: List<String>? = null
-    )
 
     inner class ServiceRecordAdapter(
         private val serviceList: List<ServiceRecord>,
@@ -259,9 +256,7 @@ class ServiceRecordActivity : AppCompatActivity() {
         private val imageSize = 250.dpToPx()
 
         override fun getCount(): Int = serviceList.size
-
         override fun getItem(position: Int): Any = serviceList[position]
-
         override fun getItemId(position: Int): Long = position.toLong()
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
@@ -280,13 +275,22 @@ class ServiceRecordActivity : AppCompatActivity() {
             }
 
             val service = serviceList[position]
+            setupBasicInfo(viewHolder, service)
+            setupExpandedDetails(viewHolder, service)
+            setupImages(viewHolder, service)
+            setupDeleteButton(viewHolder, service)
+            setupExpandCollapse(view, viewHolder, position)
 
-            // Set basic info
+            return view
+        }
+
+        private fun setupBasicInfo(viewHolder: ViewHolder, service: ServiceRecord) {
             viewHolder.tvOdometerReading.text = "${service.odometerReading} km"
             viewHolder.tvServiceDate.text = service.date
             viewHolder.tvServiceCost.text = "Rs ${service.serviceCost}"
+        }
 
-            // Set expanded details
+        private fun setupExpandedDetails(viewHolder: ViewHolder, service: ServiceRecord) {
             service.serviceType?.let {
                 viewHolder.tvServiceType.text = "Service: $it"
                 viewHolder.tvServiceType.visibility = View.VISIBLE
@@ -301,41 +305,41 @@ class ServiceRecordActivity : AppCompatActivity() {
                 viewHolder.tvNotes.text = "Notes: $it"
                 viewHolder.tvNotes.visibility = View.VISIBLE
             } ?: run { viewHolder.tvNotes.visibility = View.GONE }
+        }
 
-            // Load images if available
-            service.photoUrls?.let { urls ->
-                if (urls.isNotEmpty()) {
-                    urls.forEach { url ->
-                        val imageView = ImageView(context).apply {
-                            layoutParams = LinearLayout.LayoutParams(imageSize, imageSize).apply {
-                                marginEnd = 8.dpToPx()
-                            }
-                            scaleType = ImageView.ScaleType.CENTER_CROP
-                            adjustViewBounds = true
-                            clipToOutline = true
-                            background = ContextCompat.getDrawable(context, R.drawable.image_border)
-                        }
-
-                        Glide.with(context)
-                            .load(url)
-                            .placeholder(R.drawable.placeholder_image)
-                            .error(R.drawable.error_image)
-                            .into(imageView)
-
-                        imageView.setOnClickListener {
-                            showFullImageDialog(url)
-                        }
-
-                        viewHolder.imageContainer.addView(imageView)
+        private fun setupImages(viewHolder: ViewHolder, service: ServiceRecord) {
+            service.photoUrls?.takeIf { it.isNotEmpty() }?.forEach { url ->
+                val imageView = ImageView(context).apply {
+                    layoutParams = LinearLayout.LayoutParams(imageSize, imageSize).apply {
+                        marginEnd = 8.dpToPx()
                     }
+                    scaleType = ImageView.ScaleType.CENTER_CROP
+                    adjustViewBounds = true
+                    clipToOutline = true
+                    background = ContextCompat.getDrawable(context, R.drawable.image_border)
                 }
-            }
 
-            // Toggle expanded state
+                Glide.with(context)
+                    .load(url)
+                    .placeholder(R.drawable.placeholder_image)
+                    .error(R.drawable.error_image)
+                    .into(imageView)
+
+                imageView.setOnClickListener { showFullImageDialog(url) }
+                viewHolder.imageContainer.addView(imageView)
+            }
+        }
+
+        private fun setupDeleteButton(viewHolder: ViewHolder, service: ServiceRecord) {
+            viewHolder.btnDelete.setOnClickListener {
+                showDeleteConfirmation(service.recordId)
+            }
+        }
+
+        private fun setupExpandCollapse(view: View, viewHolder: ViewHolder, position: Int) {
             viewHolder.llExpandedDetails.visibility =
                 if (expandedPositions.contains(position)) View.VISIBLE else View.GONE
 
-            // Set click listener to toggle expansion
             view.setOnClickListener {
                 if (expandedPositions.contains(position)) {
                     expandedPositions.remove(position)
@@ -344,12 +348,10 @@ class ServiceRecordActivity : AppCompatActivity() {
                 }
                 notifyDataSetChanged()
             }
-
-            return view
         }
 
         private fun showFullImageDialog(imageUrl: String) {
-            val dialog = Dialog(context).apply {
+            Dialog(context).apply {
                 setContentView(R.layout.dialog_full_image)
                 window?.setLayout(
                     ViewGroup.LayoutParams.MATCH_PARENT,
@@ -361,8 +363,8 @@ class ServiceRecordActivity : AppCompatActivity() {
                         .into(imageView)
                 }
                 findViewById<View>(R.id.btnClose).setOnClickListener { dismiss() }
+                show()
             }
-            dialog.show()
         }
 
         private inner class ViewHolder(view: View) {
@@ -374,8 +376,24 @@ class ServiceRecordActivity : AppCompatActivity() {
             val tvNotes: TextView = view.findViewById(R.id.tvNotes)
             val llExpandedDetails: LinearLayout = view.findViewById(R.id.llExpandedDetails)
             val imageContainer: LinearLayout = view.findViewById(R.id.imageContainer)
+            val btnDelete: ImageButton = view.findViewById(R.id.btnDelete)
         }
 
         private fun Int.dpToPx(): Int = (this * context.resources.displayMetrics.density).toInt()
+    }
+
+    data class ServiceRecord(
+        val date: String,
+        val odometerReading: String,
+        val serviceCost: String,
+        val serviceType: String? = null,
+        val checkedItems: List<String>? = null,
+        val notes: String? = null,
+        val photoUrls: List<String>? = null,
+        val recordId: String = ""
+    )
+
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 }

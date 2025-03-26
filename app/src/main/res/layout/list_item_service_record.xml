@@ -104,5 +104,17 @@
                 <!-- Images will be added programmatically -->
             </LinearLayout>
         </HorizontalScrollView>
+
+        <!-- Delete Button -->
+        <ImageButton
+            android:id="@+id/btnDelete"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:src="@drawable/ic_delete"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Delete record"
+            android:layout_marginBottom="16dp"/>
+
     </LinearLayout>
 </LinearLayout>
