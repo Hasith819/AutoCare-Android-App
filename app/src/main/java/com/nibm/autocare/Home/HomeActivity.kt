@@ -250,34 +250,43 @@ class HomeActivity : AppCompatActivity() {
         finish() // Close the current activity
     }
 
-    // Delete the user account and associated data
     private fun deleteAccount() {
-        val currentUser = auth.currentUser
-        if (currentUser != null) {
-            val userId = currentUser.uid
-
-            // Delete user data from Realtime Database
-            val userRef = database.reference.child("users").child(userId)
-            userRef.removeValue().addOnCompleteListener { dbTask ->
-                if (dbTask.isSuccessful) {
-                    // Delete Firebase Authentication account
-                    currentUser.delete().addOnCompleteListener { authTask ->
-                        if (authTask.isSuccessful) {
-                            Toast.makeText(this, "Account deleted successfully", Toast.LENGTH_SHORT).show()
-
-                            // Logout and navigate to LoginActivity
-                            logout()
-                        } else {
-                            Toast.makeText(this, "Failed to delete account: ${authTask.exception?.message}", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                } else {
-                    Toast.makeText(this, "Failed to delete user data: ${dbTask.exception?.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
-        } else {
+        val currentUser = auth.currentUser ?: run {
             Toast.makeText(this, "No user is currently logged in", Toast.LENGTH_SHORT).show()
+            return
         }
+
+        val userId = currentUser.uid
+
+        // Create a list of all paths that need to be deleted
+        val pathsToDelete = mapOf(
+            "users" to database.reference.child("users").child(userId),
+            "users_services" to database.reference.child("users_services").child(userId),
+            "users_vehicles" to database.reference.child("users_vehicles").child(userId)
+        )
+
+        // Perform all deletions
+        val deleteTasks = pathsToDelete.map { (_, ref) -> ref.removeValue() }
+
+        com.google.android.gms.tasks.Tasks.whenAll(deleteTasks)
+            .addOnSuccessListener {
+                // After deleting database entries, delete the auth account
+                currentUser.delete()
+                    .addOnSuccessListener {
+                        Toast.makeText(this, "Account and all data deleted successfully", Toast.LENGTH_SHORT).show()
+                        logout()
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(this,
+                            "Account data deleted but failed to remove authentication: ${e.message}",
+                            Toast.LENGTH_SHORT).show()
+                    }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this,
+                    "Failed to delete user data: ${e.message}",
+                    Toast.LENGTH_SHORT).show()
+            }
     }
 
     // Data class for Vehicle
