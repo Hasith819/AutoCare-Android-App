@@ -27,4 +27,7 @@
 
     <color name="gray">#808080</color>
 
+    <color name="status_bar_light">#6200EE</color>
+    <color name="status_bar_dark">#121212</color>
+
 </resources>

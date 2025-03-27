@@ -373,11 +373,17 @@ class HomeActivity : AppCompatActivity() {
             viewHolder.tvModel.text = vehicle.model
 
             viewHolder.btnEdit.setOnClickListener {
+                // Get the vehicle ID from Firebase using the registration number
                 getVehicleId(vehicle.registrationNumber) { vehicleId ->
                     if (vehicleId != null) {
                         val intent = Intent(this@HomeActivity, AddVehicleActivity::class.java).apply {
-                            putExtra("registrationNumber", vehicle.registrationNumber)
                             putExtra("vehicleId", vehicleId)
+                            putExtra("registrationNumber", vehicle.registrationNumber)
+                            putExtra("brand", vehicle.brand)
+                            putExtra("model", vehicle.model)
+                            putExtra("manufacturedYear", vehicle.manufacturedYear)
+                            putExtra("currentMileage", vehicle.currentMileage.toString())
+                            putExtra("weeklyRidingDistance", vehicle.weeklyRidingDistance.toString())
                         }
                         startActivity(intent)
                     } else {
