@@ -2,13 +2,16 @@ package com.nibm.autocare
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.AdapterView
 import android.widget.BaseAdapter
+import android.widget.EditText
 import android.widget.ListView
 import android.widget.PopupMenu
 import android.widget.TextView
@@ -32,6 +35,10 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var database: FirebaseDatabase
 
+    private lateinit var etSearch: EditText
+    private lateinit var originalVehicleList: MutableList<Vehicle>
+    private var isSearchActive = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
@@ -43,12 +50,15 @@ class HomeActivity : AppCompatActivity() {
         // Initialize views
         tvGreeting = findViewById(R.id.tvGreeting)
         lvVehicles = findViewById(R.id.lvEmails)
+        etSearch = findViewById(R.id.etSearch)
 
-        // Fetch and display the username from Firebase Realtime Database
+        originalVehicleList = mutableListOf()
+
+        setupSearch()
+
         fetchUsername()
-
-        // Fetch and display the user's vehicles
         fetchVehicles()
+
 
         // Set up menu icon click listener
         findViewById<View>(R.id.ivMenu).setOnClickListener {
@@ -81,6 +91,57 @@ class HomeActivity : AppCompatActivity() {
             true
         }
     }
+
+    private fun setupSearch() {
+        etSearch.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                performSearch()
+                true
+            } else {
+                false
+            }
+        }
+
+        etSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                if (s.isNullOrEmpty()) {
+                    // Show all vehicles when search is cleared
+                    if (isSearchActive) {
+                        vehicleList.clear()
+                        vehicleList.addAll(originalVehicleList)
+                        (lvVehicles.adapter as? BaseAdapter)?.notifyDataSetChanged()
+                        isSearchActive = false
+                    }
+                } else {
+                    performSearch()
+                }
+            }
+        })
+    }
+
+    private fun performSearch() {
+        val query = etSearch.text.toString().trim().lowercase()
+        if (query.isEmpty()) return
+
+        isSearchActive = true
+
+        // Filter vehicles by registration number
+        val filteredList = originalVehicleList.filter {
+            it.registrationNumber.lowercase().contains(query)
+        }
+
+        vehicleList.clear()
+        vehicleList.addAll(filteredList)
+        (lvVehicles.adapter as? BaseAdapter)?.notifyDataSetChanged()
+
+        if (filteredList.isEmpty()) {
+            Toast.makeText(this, "No vehicles found", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
 
     private fun showDeleteConfirmationDialog(vehicle: Vehicle) {
         AlertDialog.Builder(this)
@@ -188,7 +249,9 @@ class HomeActivity : AppCompatActivity() {
 
             vehiclesRef.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    vehicleList.clear() // Clear existing items
+                    originalVehicleList.clear()
+                    vehicleList.clear()
+
                     for (vehicleSnapshot in snapshot.children) {
                         val registrationNumber = vehicleSnapshot.child("registrationNumber").getValue(String::class.java)
                         val brand = vehicleSnapshot.child("brand").getValue(String::class.java)
@@ -197,8 +260,14 @@ class HomeActivity : AppCompatActivity() {
 
                         if (registrationNumber != null && brand != null && manufacturedYear != null && model != null) {
                             val vehicle = Vehicle(registrationNumber, brand, manufacturedYear, model)
-                            vehicleList.add(vehicle)
+                            originalVehicleList.add(vehicle)
                         }
+                    }
+
+                    // Update both lists and refresh adapter
+                    if (!isSearchActive) {
+                        vehicleList.clear()
+                        vehicleList.addAll(originalVehicleList)
                     }
 
                     val adapter = VehicleAdapter(vehicleList)

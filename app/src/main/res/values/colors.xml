@@ -25,4 +25,6 @@
 
     <color name="red">#F44336</color>
 
+    <color name="gray">#808080</color>
+
 </resources>

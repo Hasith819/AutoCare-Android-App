@@ -46,6 +46,40 @@
       android:gravity="center"
       android:textColor="@color/black" />
 
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginStart="16dp"
+      android:layout_marginEnd="16dp"
+      android:layout_marginTop="8dp"
+      android:background="@drawable/search_bar_background"
+      android:orientation="horizontal"
+      android:padding="8dp">
+
+    <ImageView
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginTop="8dp"
+    android:src="@drawable/ic_search"
+    android:tint="@color/gray" />
+
+    <EditText
+        android:id="@+id/etSearch"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@null"
+        android:hint="Search vehicles..."
+        android:imeOptions="actionSearch"
+        android:inputType="text"
+        android:maxLines="1"
+        android:padding="8dp"
+        android:textColor="@color/black"
+        android:textColorHint="@color/gray" />
+  </LinearLayout>
+
+
   <!-- List to Display Vehicle Data -->
   <ListView
       android:id="@+id/lvEmails"
