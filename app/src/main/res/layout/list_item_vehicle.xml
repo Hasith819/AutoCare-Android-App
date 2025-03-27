@@ -1,65 +1,82 @@
 <?xml version="1.0" encoding="utf-8"?>
-<GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:columnCount="2"
-    android:rowCount="2"
+    android:orientation="horizontal"
     android:padding="16dp"
     android:background="@color/yellow">
 
-    <!-- Top Left: Registration Number -->
-    <TextView
-        android:id="@+id/tvRegistrationNumber"
+    <!-- Left Column - Registration Number and Year -->
+    <LinearLayout
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_columnWeight="1"
-        android:layout_rowWeight="1"
-        android:text="KN 2234"
-        android:textSize="18sp"
-        android:textColor="@color/black"
-        android:textStyle="bold"
-        android:gravity="start"
-        android:padding="8dp" />
+        android:layout_height="match_parent"
+        android:layout_weight="2"
+        android:orientation="vertical"
+        android:gravity="start">
 
-    <!-- Top Right: Brand -->
-    <TextView
-        android:id="@+id/tvBrand"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_columnWeight="1"
-        android:layout_rowWeight="1"
-        android:text="Toyota"
-        android:textSize="18sp"
-        android:textColor="@color/black"
-        android:textStyle="bold"
-        android:gravity="end"
-        android:padding="8dp" />
+        <TextView
+            android:id="@+id/tvRegistrationNumber"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="KN 2234"
+            android:textSize="18sp"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:padding="8dp" />
 
-    <!-- Bottom Left: Manufactured Year -->
-    <TextView
-        android:id="@+id/tvManufacturedYear"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_columnWeight="1"
-        android:layout_rowWeight="1"
-        android:text="2010"
-        android:textSize="18sp"
-        android:textColor="@color/black"
-        android:textStyle="bold"
-        android:gravity="start"
-        android:padding="8dp" />
+        <TextView
+            android:id="@+id/tvManufacturedYear"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="2010"
+            android:textSize="18sp"
+            android:textColor="@color/black"
+            android:padding="8dp" />
+    </LinearLayout>
 
-    <!-- Bottom Right: Model -->
-    <TextView
-        android:id="@+id/tvModel"
+    <!-- Middle Column - Brand and Model -->
+    <LinearLayout
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_columnWeight="1"
-        android:layout_rowWeight="1"
-        android:text="Allion"
-        android:textSize="18sp"
-        android:textColor="@color/black"
-        android:textStyle="bold"
-        android:gravity="end"
-        android:padding="8dp" />
-</GridLayout>
+        android:layout_height="match_parent"
+        android:layout_weight="2"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/tvBrand"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Toyota"
+            android:textSize="18sp"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:padding="8dp" />
+
+        <TextView
+            android:id="@+id/tvModel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Allion"
+            android:textSize="18sp"
+            android:textColor="@color/black"
+            android:gravity="center"
+            android:padding="8dp" />
+    </LinearLayout>
+
+    <!-- Right Column - Edit Button -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center">
+
+        <ImageButton
+            android:id="@+id/btnEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_edit"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="8dp" />
+    </LinearLayout>
+</LinearLayout>

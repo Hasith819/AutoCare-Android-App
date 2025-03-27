@@ -9,9 +9,9 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import android.widget.AdapterView
 import android.widget.BaseAdapter
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.ListView
 import android.widget.PopupMenu
 import android.widget.TextView
@@ -34,7 +34,6 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var lvVehicles: ListView
     private lateinit var auth: FirebaseAuth
     private lateinit var database: FirebaseDatabase
-
     private lateinit var etSearch: EditText
     private lateinit var originalVehicleList: MutableList<Vehicle>
     private var isSearchActive = false
@@ -43,52 +42,25 @@ class HomeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
-        // Initialize Firebase Auth and Database
+        // Initialize Firebase and views
         auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance()
-
-        // Initialize views
         tvGreeting = findViewById(R.id.tvGreeting)
         lvVehicles = findViewById(R.id.lvEmails)
         etSearch = findViewById(R.id.etSearch)
-
         originalVehicleList = mutableListOf()
 
         setupSearch()
-
         fetchUsername()
         fetchVehicles()
 
-
-        // Set up menu icon click listener
-        findViewById<View>(R.id.ivMenu).setOnClickListener {
-            showMenu(it)
-        }
-
+        // Set up click listeners
+        findViewById<View>(R.id.ivMenu).setOnClickListener { showMenu(it) }
         findViewById<View>(R.id.llAddVehicle).setOnClickListener {
-            val intent = Intent(this, AddVehicleActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, AddVehicleActivity::class.java))
         }
-
         findViewById<View>(R.id.llAddService).setOnClickListener {
-            val intent = Intent(this, AddServiceActivity::class.java)
-            startActivity(intent)
-        }
-
-        // Set click listener for vehicle items
-        lvVehicles.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
-            val selectedVehicle = vehicleList[position]
-            val intent = Intent(this, ServiceRecordActivity::class.java).apply {
-                putExtra("vehicleRegistration", selectedVehicle.registrationNumber)
-            }
-            startActivity(intent)
-        }
-
-        // Set long click listener for vehicle deletion
-        lvVehicles.onItemLongClickListener = AdapterView.OnItemLongClickListener { _, _, position, _ ->
-            val selectedVehicle = vehicleList[position]
-            showDeleteConfirmationDialog(selectedVehicle)
-            true
+            startActivity(Intent(this, AddServiceActivity::class.java))
         }
     }
 
@@ -107,7 +79,6 @@ class HomeActivity : AppCompatActivity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
                 if (s.isNullOrEmpty()) {
-                    // Show all vehicles when search is cleared
                     if (isSearchActive) {
                         vehicleList.clear()
                         vehicleList.addAll(originalVehicleList)
@@ -126,8 +97,6 @@ class HomeActivity : AppCompatActivity() {
         if (query.isEmpty()) return
 
         isSearchActive = true
-
-        // Filter vehicles by registration number
         val filteredList = originalVehicleList.filter {
             it.registrationNumber.lowercase().contains(query)
         }
@@ -140,8 +109,6 @@ class HomeActivity : AppCompatActivity() {
             Toast.makeText(this, "No vehicles found", Toast.LENGTH_SHORT).show()
         }
     }
-
-
 
     private fun showDeleteConfirmationDialog(vehicle: Vehicle) {
         AlertDialog.Builder(this)
@@ -187,10 +154,8 @@ class HomeActivity : AppCompatActivity() {
         val vehicleRef = database.reference.child("users_vehicles").child(userId).child(vehicleId)
         val servicesRef = database.reference.child("users_services").child(userId).child(registrationNumber)
 
-        // First delete the entire services node for this vehicle
         servicesRef.removeValue()
             .addOnSuccessListener {
-                // After services are deleted, delete the vehicle
                 vehicleRef.removeValue()
                     .addOnSuccessListener {
                         Toast.makeText(
@@ -216,7 +181,6 @@ class HomeActivity : AppCompatActivity() {
             }
     }
 
-    // Fetch username from Firebase Realtime Database
     private fun fetchUsername() {
         val currentUser = auth.currentUser
         if (currentUser != null) {
@@ -240,7 +204,6 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    // Fetch vehicles from Firebase Realtime Database
     private fun fetchVehicles() {
         val currentUser = auth.currentUser
         if (currentUser != null) {
@@ -259,12 +222,18 @@ class HomeActivity : AppCompatActivity() {
                         val model = vehicleSnapshot.child("model").getValue(String::class.java)
 
                         if (registrationNumber != null && brand != null && manufacturedYear != null && model != null) {
-                            val vehicle = Vehicle(registrationNumber, brand, manufacturedYear, model)
+                            val vehicle = Vehicle(
+                                registrationNumber,
+                                brand,
+                                manufacturedYear,
+                                model,
+                                vehicleSnapshot.child("currentMileage").getValue(Int::class.java) ?: 0,
+                                vehicleSnapshot.child("weeklyRidingDistance").getValue(Int::class.java) ?: 0
+                            )
                             originalVehicleList.add(vehicle)
                         }
                     }
 
-                    // Update both lists and refresh adapter
                     if (!isSearchActive) {
                         vehicleList.clear()
                         vehicleList.addAll(originalVehicleList)
@@ -281,42 +250,58 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    // Function to show the dropdown menu
+    private fun getVehicleId(registrationNumber: String, callback: (String?) -> Unit) {
+        val currentUser = auth.currentUser ?: run {
+            callback(null)
+            return
+        }
+
+        database.reference.child("users_vehicles").child(currentUser.uid)
+            .orderByChild("registrationNumber").equalTo(registrationNumber)
+            .addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (snapshot.exists()) {
+                        for (vehicleSnapshot in snapshot.children) {
+                            callback(vehicleSnapshot.key)
+                            return
+                        }
+                    }
+                    callback(null)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    callback(null)
+                }
+            })
+    }
+
     private fun showMenu(view: View) {
         val popupMenu = PopupMenu(this, view)
-        popupMenu.inflate(R.menu.menu_home) // Inflate the menu_home.xml
+        popupMenu.inflate(R.menu.menu_home)
 
-        // Set click listener for menu items
         popupMenu.setOnMenuItemClickListener { item: MenuItem ->
             when (item.itemId) {
                 R.id.menu_logout -> {
-                    // Handle logout
                     logout()
                     true
                 }
                 R.id.menu_delete_account -> {
-                    // Handle delete account
                     deleteAccount()
                     true
                 }
                 else -> false
             }
         }
-
-        // Show the menu
         popupMenu.show()
     }
 
-    // Logout the user
     private fun logout() {
-        auth.signOut() // Sign out from Firebase
+        auth.signOut()
         Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show()
-
-        // Navigate to LoginActivity and clear the back stack
         val intent = Intent(this, LoginActivity::class.java)
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
-        finish() // Close the current activity
+        finish()
     }
 
     private fun deleteAccount() {
@@ -326,20 +311,16 @@ class HomeActivity : AppCompatActivity() {
         }
 
         val userId = currentUser.uid
-
-        // Create a list of all paths that need to be deleted
         val pathsToDelete = mapOf(
             "users" to database.reference.child("users").child(userId),
             "users_services" to database.reference.child("users_services").child(userId),
             "users_vehicles" to database.reference.child("users_vehicles").child(userId)
         )
 
-        // Perform all deletions
         val deleteTasks = pathsToDelete.map { (_, ref) -> ref.removeValue() }
 
         com.google.android.gms.tasks.Tasks.whenAll(deleteTasks)
             .addOnSuccessListener {
-                // After deleting database entries, delete the auth account
                 currentUser.delete()
                     .addOnSuccessListener {
                         Toast.makeText(this, "Account and all data deleted successfully", Toast.LENGTH_SHORT).show()
@@ -358,27 +339,19 @@ class HomeActivity : AppCompatActivity() {
             }
     }
 
-    // Data class for Vehicle
     data class Vehicle(
         val registrationNumber: String,
         val brand: String,
         val manufacturedYear: String,
-        val model: String
+        val model: String,
+        val currentMileage: Int = 0,
+        val weeklyRidingDistance: Int = 0
     )
 
-    // Custom Adapter for Vehicle List
     inner class VehicleAdapter(private val vehicleList: List<Vehicle>) : BaseAdapter() {
-        override fun getCount(): Int {
-            return vehicleList.size
-        }
-
-        override fun getItem(position: Int): Any {
-            return vehicleList[position]
-        }
-
-        override fun getItemId(position: Int): Long {
-            return position.toLong()
-        }
+        override fun getCount(): Int = vehicleList.size
+        override fun getItem(position: Int): Any = vehicleList[position]
+        override fun getItemId(position: Int): Long = position.toLong()
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
             val view: View
@@ -399,15 +372,41 @@ class HomeActivity : AppCompatActivity() {
             viewHolder.tvManufacturedYear.text = vehicle.manufacturedYear
             viewHolder.tvModel.text = vehicle.model
 
+            viewHolder.btnEdit.setOnClickListener {
+                getVehicleId(vehicle.registrationNumber) { vehicleId ->
+                    if (vehicleId != null) {
+                        val intent = Intent(this@HomeActivity, AddVehicleActivity::class.java).apply {
+                            putExtra("registrationNumber", vehicle.registrationNumber)
+                            putExtra("vehicleId", vehicleId)
+                        }
+                        startActivity(intent)
+                    } else {
+                        Toast.makeText(this@HomeActivity, "Could not find vehicle ID", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+
+            view.setOnClickListener {
+                val intent = Intent(this@HomeActivity, ServiceRecordActivity::class.java).apply {
+                    putExtra("vehicleRegistration", vehicle.registrationNumber)
+                }
+                startActivity(intent)
+            }
+
+            view.setOnLongClickListener {
+                showDeleteConfirmationDialog(vehicle)
+                true
+            }
+
             return view
         }
 
-        // ViewHolder pattern for better performance
         private inner class ViewHolder(view: View) {
             val tvRegistrationNumber: TextView = view.findViewById(R.id.tvRegistrationNumber)
             val tvBrand: TextView = view.findViewById(R.id.tvBrand)
             val tvManufacturedYear: TextView = view.findViewById(R.id.tvManufacturedYear)
             val tvModel: TextView = view.findViewById(R.id.tvModel)
+            val btnEdit: ImageButton = view.findViewById(R.id.btnEdit)
         }
     }
 }
