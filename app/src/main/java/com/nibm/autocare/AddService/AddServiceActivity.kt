@@ -12,6 +12,7 @@ import android.util.Log
 import android.view.View
 import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -32,7 +33,7 @@ import java.util.*
 
 class AddServiceActivity : AppCompatActivity() {
 
-    // Declare UI components
+    // UI Components
     private lateinit var spinnerServiceType: Spinner
     private lateinit var spinnerVehicle: Spinner
     private lateinit var etServiceDate: EditText
@@ -65,65 +66,68 @@ class AddServiceActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var database: FirebaseDatabase
 
-    // Adapter for uploaded photos
+    // Photo handling
     private lateinit var uploadedPhotosAdapter: UploadedPhotosAdapter
     private val uploadedPhotos = mutableListOf<Uri>()
-
-    // Activity result launcher for gallery and camera
-    private val galleryLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                val data = result.data
-                if (data != null) {
-                    // Handle multiple photo selection
-                    if (data.clipData != null) {
-                        val clipData = data.clipData
-                        for (i in 0 until clipData!!.itemCount) {
-                            val photoUri = clipData.getItemAt(i).uri
-                            uploadedPhotos.add(photoUri)
-                        }
-                    } else if (data.data != null) {
-                        // Handle single photo selection
-                        val photoUri = data.data
-                        if (photoUri != null) {
-                            uploadedPhotos.add(photoUri)
-                        }
-                    }
-                    uploadedPhotosAdapter.notifyDataSetChanged()
-                }
-            }
-        }
-
-    private val cameraLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                cameraImageUri?.let { uri ->
-                    uploadedPhotos.add(uri)
-                    uploadedPhotosAdapter.notifyDataSetChanged()
-                    cameraImageUri = null
-                }
-            }
-        }
-
     private var cameraImageUri: Uri? = null
     private val CAMERA_PERMISSION_REQUEST_CODE = 1001
+
+    // Progress tracking
+    private lateinit var progressDialog: AlertDialog
+    private var totalPhotosToUpload = 0
+    private var uploadedPhotoCount = 0
+
+    // Activity result launchers
+    private val galleryLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            result.data?.let { data ->
+                if (data.clipData != null) {
+                    // Multiple photos selected
+                    val clipData = data.clipData
+                    for (i in 0 until clipData!!.itemCount) {
+                        uploadedPhotos.add(clipData.getItemAt(i).uri)
+                    }
+                } else {
+                    // Single photo selected
+                    data.data?.let { uri -> uploadedPhotos.add(uri) }
+                }
+                uploadedPhotosAdapter.notifyDataSetChanged()
+            }
+        }
+    }
+
+    private val cameraLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            cameraImageUri?.let {
+                uploadedPhotos.add(it)
+                uploadedPhotosAdapter.notifyDataSetChanged()
+                cameraImageUri = null
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_service)
 
-        // Initialize Firebase Auth and Database
+        initializeFirebase()
+        initializeUIComponents()
+        setupProgressDialog()
+        setupNavigation()
+        fetchUserVehicles()
+        setupServiceTypeSpinner()
+        setupDatePicker()
+        setupPhotoButtons()
+        setupSaveButton()
+    }
+
+    private fun initializeFirebase() {
         auth = FirebaseAuth.getInstance()
         database = FirebaseDatabase.getInstance()
+    }
 
-        // Initialize Cloudinary
-//        val config = HashMap<String, String>()
-//        config["cloud_name"] = "dt2vnetaw"
-//        config["api_key"] = "819723664299813"
-//        config["api_secret"] = "wR2kaZn98ektecTnPLt0c9bBpwo"
-//        MediaManager.init(this, config)
-
-        // Initialize UI components
+    private fun initializeUIComponents() {
+        // Initialize all UI components
         spinnerServiceType = findViewById(R.id.spinnerServiceType)
         spinnerVehicle = findViewById(R.id.spinnerVehicle)
         etServiceDate = findViewById(R.id.etServiceDate)
@@ -152,15 +156,24 @@ class AddServiceActivity : AppCompatActivity() {
         rvUploadedPhotos = findViewById(R.id.rvUploadedPhotos)
         btnSave = findViewById(R.id.btnSave)
 
-        // Set up RecyclerView for uploaded photos
+        // Setup RecyclerView
         uploadedPhotosAdapter = UploadedPhotosAdapter(uploadedPhotos) { position ->
             uploadedPhotos.removeAt(position)
             uploadedPhotosAdapter.notifyDataSetChanged()
         }
         rvUploadedPhotos.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         rvUploadedPhotos.adapter = uploadedPhotosAdapter
+    }
 
-        // Set up navigation
+    private fun setupProgressDialog() {
+        progressDialog = AlertDialog.Builder(this)
+            .setTitle("Uploading Photos")
+            .setView(R.layout.dialog_upload_progress)
+            .setCancelable(false)
+            .create()
+    }
+
+    private fun setupNavigation() {
         findViewById<View>(R.id.llHome).setOnClickListener {
             startActivity(Intent(this, HomeActivity::class.java))
         }
@@ -168,144 +181,63 @@ class AddServiceActivity : AppCompatActivity() {
         findViewById<View>(R.id.llAddVehicle).setOnClickListener {
             startActivity(Intent(this, AddVehicleActivity::class.java))
         }
-
-        // Fetch and populate the logged-in user's vehicles
-        fetchUserVehicles()
-
-        // Set up the service type spinner
-        setupServiceTypeSpinner()
-
-        // Set up the date picker
-        setupDatePicker()
-
-        // Set up gallery button
-        findViewById<View>(R.id.btnGallery).setOnClickListener {
-            openGallery()
-        }
-
-        // Set up camera button
-        findViewById<View>(R.id.btnCamera).setOnClickListener {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION_REQUEST_CODE)
-            } else {
-                openCamera()
-            }
-        }
-
-        // Set up save button
-        btnSave.setOnClickListener {
-            saveServiceData()
-        }
     }
 
-    // Open gallery for photo selection
-    private fun openGallery() {
-        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-        galleryLauncher.launch(intent)
-    }
-
-    // Open camera for photo capture
-    private fun openCamera() {
-        val values = ContentValues().apply {
-            put(MediaStore.Images.Media.TITLE, "New Picture")
-            put(MediaStore.Images.Media.DESCRIPTION, "From Camera")
-        }
-        cameraImageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
-        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
-            putExtra(MediaStore.EXTRA_OUTPUT, cameraImageUri)
-        }
-        cameraLauncher.launch(cameraIntent)
-    }
-
-    // Handle permission result
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                openCamera()
-            }
-        }
-    }
-
-    // Fetch the logged-in user's vehicles from Firebase
     private fun fetchUserVehicles() {
-        val currentUser = auth.currentUser
-        if (currentUser != null) {
-            val userId = currentUser.uid
-            val vehiclesRef = database.reference.child("users_vehicles").child(userId)
+        val currentUser = auth.currentUser ?: return
+        val userId = currentUser.uid
+        val vehiclesRef = database.reference.child("users_vehicles").child(userId)
 
-            vehiclesRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val vehicleList = mutableListOf<String>()
-                    for (vehicleSnapshot in snapshot.children) {
-                        val registrationNumber = vehicleSnapshot.child("registrationNumber").getValue(String::class.java)
-                        if (registrationNumber != null) {
-                            vehicleList.add(registrationNumber)
-                        }
+        vehiclesRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val vehicleList = mutableListOf<String>()
+                snapshot.children.forEach { vehicleSnapshot ->
+                    vehicleSnapshot.child("registrationNumber").getValue(String::class.java)?.let {
+                        vehicleList.add(it)
                     }
-
-                    // Populate the spinner with the vehicle registration numbers
-                    val adapter = ArrayAdapter(this@AddServiceActivity, android.R.layout.simple_spinner_item, vehicleList)
-                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                    spinnerVehicle.adapter = adapter
                 }
 
-                override fun onCancelled(error: DatabaseError) {
-                    Toast.makeText(this@AddServiceActivity, "Failed to fetch vehicles: ${error.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
-        }
+                val adapter = ArrayAdapter(
+                    this@AddServiceActivity,
+                    android.R.layout.simple_spinner_item,
+                    vehicleList
+                )
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                spinnerVehicle.adapter = adapter
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(
+                    this@AddServiceActivity,
+                    "Failed to fetch vehicles: ${error.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        })
     }
 
-    // Set up the service type spinner
     private fun setupServiceTypeSpinner() {
         val serviceTypes = listOf("5,000 km Service", "40,000 km Service", "100,000 km Service")
         val serviceChecklists = mapOf(
             "5,000 km Service" to listOf(
-                cbEngineOilChange,
-                cbOilFilterReplace,
-                cbFluidLevelChecks,
-                cbTireInspection,
-                cbBrakeSystemCheck,
-                cbLightsElectricalsCheck,
-                cbAirFilterInspection,
-                cbWheelAlignmentCheck
+                cbEngineOilChange, cbOilFilterReplace, cbFluidLevelChecks,
+                cbTireInspection, cbBrakeSystemCheck, cbLightsElectricalsCheck,
+                cbAirFilterInspection, cbWheelAlignmentCheck
             ),
             "40,000 km Service" to listOf(
-                cbEngineOilChange,
-                cbOilFilterReplace,
-                cbAirFilterInspection,
-                cbCabinFilterChange,
-                cbFuelFilterInspection,
-                cbBrakeFluidFlush,
-                cbCoolantFluidFlush,
-                cbTransmissionOilChange,
-                cbTireInspection,
-                cbBrakeSystemCheck,
-                cbLightsElectricalsCheck,
-                cbAirConditioningSystemCheck,
+                cbEngineOilChange, cbOilFilterReplace, cbAirFilterInspection,
+                cbCabinFilterChange, cbFuelFilterInspection, cbBrakeFluidFlush,
+                cbCoolantFluidFlush, cbTransmissionOilChange, cbTireInspection,
+                cbBrakeSystemCheck, cbLightsElectricalsCheck, cbAirConditioningSystemCheck,
                 cbWheelAlignmentCheck
             ),
             "100,000 km Service" to listOf(
-                cbTimingBeltChainReplacement,
-                cbSparkPlugReplacement,
-                cbSuspensionComponentCheck,
-                cbDriveBeltReplacement,
-                cbFuelSystemService,
-                cbEngineOilChange,
-                cbOilFilterReplace,
-                cbAirFilterInspection,
-                cbCabinFilterChange,
-                cbFuelFilterInspection,
-                cbBrakeFluidFlush,
-                cbCoolantFluidFlush,
-                cbTransmissionOilChange,
-                cbAirConditioningSystemCheck,
-                cbTireInspection,
-                cbBrakeSystemCheck,
-                cbLightsElectricalsCheck,
-                cbWheelAlignmentCheck
+                cbTimingBeltChainReplacement, cbSparkPlugReplacement, cbSuspensionComponentCheck,
+                cbDriveBeltReplacement, cbFuelSystemService, cbEngineOilChange,
+                cbOilFilterReplace, cbAirFilterInspection, cbCabinFilterChange,
+                cbFuelFilterInspection, cbBrakeFluidFlush, cbCoolantFluidFlush,
+                cbTransmissionOilChange, cbAirConditioningSystemCheck, cbTireInspection,
+                cbBrakeSystemCheck, cbLightsElectricalsCheck, cbWheelAlignmentCheck
             )
         )
 
@@ -315,52 +247,30 @@ class AddServiceActivity : AppCompatActivity() {
 
         spinnerServiceType.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val selectedService = serviceTypes[position]
-                updateChecklist(serviceChecklists[selectedService] ?: emptyList())
+                updateChecklist(serviceChecklists[serviceTypes[position]] ?: emptyList())
             }
 
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-                // Do nothing
-            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
     }
 
-    // Update the checklist based on the selected service type
     private fun updateChecklist(checklist: List<CheckBox>) {
-        // Hide all checkboxes initially
         listOf(
-            cbEngineOilChange,
-            cbOilFilterReplace,
-            cbFluidLevelChecks,
-            cbTireInspection,
-            cbBrakeSystemCheck,
-            cbLightsElectricalsCheck,
-            cbAirFilterInspection,
-            cbWheelAlignmentCheck,
-            cbCabinFilterChange,
-            cbFuelFilterInspection,
-            cbBrakeFluidFlush,
-            cbCoolantFluidFlush,
-            cbTransmissionOilChange,
-            cbAirConditioningSystemCheck,
-            cbTimingBeltChainReplacement,
-            cbSparkPlugReplacement,
-            cbSuspensionComponentCheck,
-            cbDriveBeltReplacement,
-            cbFuelSystemService
+            cbEngineOilChange, cbOilFilterReplace, cbFluidLevelChecks, cbTireInspection,
+            cbBrakeSystemCheck, cbLightsElectricalsCheck, cbAirFilterInspection, cbWheelAlignmentCheck,
+            cbCabinFilterChange, cbFuelFilterInspection, cbBrakeFluidFlush, cbCoolantFluidFlush,
+            cbTransmissionOilChange, cbAirConditioningSystemCheck, cbTimingBeltChainReplacement,
+            cbSparkPlugReplacement, cbSuspensionComponentCheck, cbDriveBeltReplacement, cbFuelSystemService
         ).forEach { it.visibility = View.GONE }
 
-        // Show the checkboxes for the selected service type
         checklist.forEach { it.visibility = View.VISIBLE }
     }
 
-    // Set up the date picker
     private fun setupDatePicker() {
         val calendar = Calendar.getInstance()
-        val datePickerListener = DatePickerDialog.OnDateSetListener { _: DatePicker, year: Int, month: Int, day: Int ->
+        val datePickerListener = DatePickerDialog.OnDateSetListener { _, year, month, day ->
             calendar.set(year, month, day)
-            val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            etServiceDate.setText(dateFormat.format(calendar.time))
+            etServiceDate.setText(SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(calendar.time))
         }
 
         etServiceDate.setOnClickListener {
@@ -374,27 +284,66 @@ class AddServiceActivity : AppCompatActivity() {
         }
     }
 
-    // Validate mandatory fields
-    private fun validateInputs(): Boolean {
-        val date = etServiceDate.text.toString().trim()
-        val odometerReading = etOdometerReading.text.toString().trim()
-        val serviceCost = etServiceCost.text.toString().trim()
-        val checkedItems = getCheckedItems()
+    private fun setupPhotoButtons() {
+        findViewById<View>(R.id.btnGallery).setOnClickListener { openGallery() }
+        findViewById<View>(R.id.btnCamera).setOnClickListener {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION_REQUEST_CODE)
+            } else {
+                openCamera()
+            }
+        }
+    }
 
+    private fun openGallery() {
+        val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI).apply {
+            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+        }
+        galleryLauncher.launch(intent)
+    }
+
+    private fun openCamera() {
+        val values = ContentValues().apply {
+            put(MediaStore.Images.Media.TITLE, "New Picture")
+            put(MediaStore.Images.Media.DESCRIPTION, "From Camera")
+        }
+        cameraImageUri = contentResolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)
+        Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
+            putExtra(MediaStore.EXTRA_OUTPUT, cameraImageUri)
+            cameraLauncher.launch(this)
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == CAMERA_PERMISSION_REQUEST_CODE && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            openCamera()
+        }
+    }
+
+    private fun setupSaveButton() {
+        btnSave.setOnClickListener {
+            if (validateInputs()) {
+                saveServiceData()
+            }
+        }
+    }
+
+    private fun validateInputs(): Boolean {
         return when {
-            date.isEmpty() -> {
+            etServiceDate.text.toString().trim().isEmpty() -> {
                 Toast.makeText(this, "Please select a date", Toast.LENGTH_SHORT).show()
                 false
             }
-            odometerReading.isEmpty() -> {
+            etOdometerReading.text.toString().trim().isEmpty() -> {
                 Toast.makeText(this, "Please enter odometer reading", Toast.LENGTH_SHORT).show()
                 false
             }
-            serviceCost.isEmpty() -> {
+            etServiceCost.text.toString().trim().isEmpty() -> {
                 Toast.makeText(this, "Please enter service cost", Toast.LENGTH_SHORT).show()
                 false
             }
-            checkedItems.size < 3 -> {
+            getCheckedItems().size < 3 -> {
                 Toast.makeText(this, "Please select at least 3 services", Toast.LENGTH_SHORT).show()
                 false
             }
@@ -402,7 +351,6 @@ class AddServiceActivity : AppCompatActivity() {
         }
     }
 
-    // Get checked items from the checklist
     private fun getCheckedItems(): List<String> {
         val checkedItems = mutableListOf<String>()
         if (cbEngineOilChange.isChecked) checkedItems.add("Engine Oil Change")
@@ -427,26 +375,25 @@ class AddServiceActivity : AppCompatActivity() {
         return checkedItems
     }
 
-    // Save service data to Firebase
     private fun saveServiceData() {
-        if (!validateInputs()) return
-
-        val currentUser = auth.currentUser
-        if (currentUser == null) {
+        val userId = auth.currentUser?.uid ?: run {
             Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val userId = currentUser.uid
-        val registrationNumber = spinnerVehicle.selectedItem.toString()
+        val registrationNumber = spinnerVehicle.selectedItem?.toString() ?: run {
+            Toast.makeText(this, "Please select a vehicle", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val date = etServiceDate.text.toString().trim()
         val odometerReading = etOdometerReading.text.toString().trim()
         val serviceType = spinnerServiceType.selectedItem.toString()
         val serviceCost = etServiceCost.text.toString().trim()
         val notes = etServiceNotes.text.toString().trim()
         val checkedItems = getCheckedItems()
+        val dateKey = date.replace("/", "-")
 
-        // Create a service data map
         val serviceData = hashMapOf(
             "date" to date,
             "odometerReading" to odometerReading,
@@ -456,19 +403,17 @@ class AddServiceActivity : AppCompatActivity() {
             "checkedItems" to checkedItems
         )
 
-        // Save to Firebase Realtime Database
         val serviceRef = database.reference.child("users_services")
             .child(userId)
             .child(registrationNumber)
-            .child(date.replace("/", "-")) // Use date as a unique key
+            .child(dateKey)
 
         serviceRef.setValue(serviceData)
             .addOnSuccessListener {
                 if (uploadedPhotos.isNotEmpty()) {
-                    uploadPhotosToCloudinary(userId, registrationNumber, date.replace("/", "-"))
+                    uploadPhotosToCloudinary(userId, registrationNumber, dateKey)
                 } else {
-                    Toast.makeText(this, "Service data saved successfully", Toast.LENGTH_SHORT).show()
-                    finish() // Close the activity after saving
+                    navigateToHome()
                 }
             }
             .addOnFailureListener {
@@ -476,57 +421,105 @@ class AddServiceActivity : AppCompatActivity() {
             }
     }
 
-    // Upload photos to Cloudinary and save URLs to Firebase
     private fun uploadPhotosToCloudinary(userId: String, registrationNumber: String, dateKey: String) {
+        totalPhotosToUpload = uploadedPhotos.size
+        uploadedPhotoCount = 0
         val photoUrls = mutableListOf<String>()
+
+        progressDialog.show()
+        progressDialog.findViewById<TextView>(R.id.tvUploadStatus)?.text =
+            "Uploading 0 of $totalPhotosToUpload photos..."
+
         uploadedPhotos.forEachIndexed { index, uri ->
             MediaManager.get().upload(uri)
                 .option("folder", "Home/AutoCare")
                 .option("public_id", "service_${userId}_${registrationNumber}_${dateKey}_$index")
                 .callback(object : UploadCallback {
                     override fun onStart(requestId: String) {
-                        Log.d("Cloudinary", "Upload started")
+                        runOnUiThread {
+                            progressDialog.findViewById<TextView>(R.id.tvUploadStatus)?.text =
+                                "Uploading photo ${index + 1} of $totalPhotosToUpload..."
+                        }
                     }
 
                     override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {
-                        Log.d("Cloudinary", "Upload in progress: $bytes/$totalBytes")
+                        val progress = (bytes * 100 / totalBytes).toInt()
+                        runOnUiThread {
+                            progressDialog.findViewById<ProgressBar>(R.id.progressBar)?.apply {
+                                isIndeterminate = false
+                                this.progress = progress
+                            }
+                        }
                     }
 
                     override fun onSuccess(requestId: String, resultData: Map<*, *>) {
-                        val imageUrl = resultData["url"].toString()
-                        photoUrls.add(imageUrl)
-                        if (photoUrls.size == uploadedPhotos.size) {
+                        uploadedPhotoCount++
+                        resultData["url"]?.toString()?.let { photoUrls.add(it) }
+
+                        runOnUiThread {
+                            progressDialog.findViewById<TextView>(R.id.tvUploadStatus)?.text =
+                                "Uploaded $uploadedPhotoCount of $totalPhotosToUpload photos..."
+                        }
+
+                        if (uploadedPhotoCount == totalPhotosToUpload) {
                             savePhotoUrls(userId, registrationNumber, dateKey, photoUrls)
                         }
                     }
 
                     override fun onError(requestId: String, error: ErrorInfo) {
+                        uploadedPhotoCount++
                         Log.e("Cloudinary", "Upload failed: ${error.description}")
-                        Toast.makeText(this@AddServiceActivity, "Upload failed: ${error.description}", Toast.LENGTH_SHORT).show()
+                        runOnUiThread {
+                            Toast.makeText(
+                                this@AddServiceActivity,
+                                "Failed to upload photo ${index + 1}",
+                                Toast.LENGTH_SHORT
+                            ).show()
+
+                            if (uploadedPhotoCount == totalPhotosToUpload) {
+                                if (photoUrls.isNotEmpty()) {
+                                    savePhotoUrls(userId, registrationNumber, dateKey, photoUrls)
+                                } else {
+                                    progressDialog.dismiss()
+                                    navigateToHome()
+                                }
+                            }
+                        }
                     }
 
                     override fun onReschedule(requestId: String, error: ErrorInfo) {
-                        Log.d("Cloudinary", "Upload rescheduled")
+                        Log.d("Cloudinary", "Upload rescheduled for photo ${index + 1}")
                     }
                 })
                 .dispatch()
         }
     }
 
-    // Save photo URLs to Firebase Realtime Database
     private fun savePhotoUrls(userId: String, registrationNumber: String, dateKey: String, photoUrls: List<String>) {
-        val serviceRef = database.reference.child("users_services")
+        progressDialog.findViewById<TextView>(R.id.tvUploadStatus)?.text = "Saving to database..."
+
+        database.reference.child("users_services")
             .child(userId)
             .child(registrationNumber)
             .child(dateKey)
-
-        serviceRef.child("photoUrls").setValue(photoUrls)
+            .child("photoUrls")
+            .setValue(photoUrls)
             .addOnSuccessListener {
-                Toast.makeText(this, "Photos uploaded successfully", Toast.LENGTH_SHORT).show()
-                finish() // Close the activity after saving
+                progressDialog.dismiss()
+                navigateToHome()
             }
-            .addOnFailureListener {
-                Toast.makeText(this, "Failed to save photo URLs: ${it.message}", Toast.LENGTH_SHORT).show()
+            .addOnFailureListener { e ->
+                progressDialog.dismiss()
+                Toast.makeText(this, "Failed to save photo URLs: ${e.message}", Toast.LENGTH_SHORT).show()
+                navigateToHome()
             }
+    }
+
+    private fun navigateToHome() {
+        val intent = Intent(this, HomeActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+        startActivity(intent)
+        finish()
     }
 }
