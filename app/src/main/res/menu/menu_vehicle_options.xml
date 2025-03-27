@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_edit_vehicle"
+        android:title="Edit Vehicle" />
+    <item
+        android:id="@+id/menu_delete_vehicle"
+        android:title="Delete Vehicle" />
+</menu>

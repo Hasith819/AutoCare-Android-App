@@ -2,6 +2,7 @@ package com.nibm.autocare
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.MenuItem
 import android.view.View
@@ -12,11 +13,13 @@ import android.widget.ListView
 import android.widget.PopupMenu
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.Query
 import com.google.firebase.database.ValueEventListener
 import com.nibm.autocare.Authentication.LoginActivity
 import com.nibm.autocare.Vehicle.AddVehicleActivity
@@ -24,7 +27,6 @@ import com.nibm.autocare.Vehicle.AddVehicleActivity
 class HomeActivity : AppCompatActivity() {
 
     private val vehicleList = mutableListOf<Vehicle>()
-
     private lateinit var tvGreeting: TextView
     private lateinit var lvVehicles: ListView
     private lateinit var auth: FirebaseAuth
@@ -53,7 +55,6 @@ class HomeActivity : AppCompatActivity() {
             showMenu(it)
         }
 
-
         findViewById<View>(R.id.llAddVehicle).setOnClickListener {
             val intent = Intent(this, AddVehicleActivity::class.java)
             startActivity(intent)
@@ -64,7 +65,6 @@ class HomeActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-
         // Set click listener for vehicle items
         lvVehicles.onItemClickListener = AdapterView.OnItemClickListener { _, _, position, _ ->
             val selectedVehicle = vehicleList[position]
@@ -74,6 +74,85 @@ class HomeActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
+        // Set long click listener for vehicle deletion
+        lvVehicles.onItemLongClickListener = AdapterView.OnItemLongClickListener { _, _, position, _ ->
+            val selectedVehicle = vehicleList[position]
+            showDeleteConfirmationDialog(selectedVehicle)
+            true
+        }
+    }
+
+    private fun showDeleteConfirmationDialog(vehicle: Vehicle) {
+        AlertDialog.Builder(this)
+            .setTitle("Delete Vehicle")
+            .setMessage("Delete ${vehicle.registrationNumber} and all its service records?")
+            .setPositiveButton("Delete") { _, _ ->
+                deleteVehicle(vehicle)
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun deleteVehicle(vehicle: Vehicle) {
+        val currentUser = auth.currentUser ?: run {
+            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val userId = currentUser.uid
+        val userVehiclesRef = database.reference.child("users_vehicles").child(userId)
+        val query: Query = userVehiclesRef.orderByChild("registrationNumber").equalTo(vehicle.registrationNumber)
+
+        query.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (!snapshot.exists()) {
+                    Toast.makeText(this@HomeActivity, "Vehicle not found", Toast.LENGTH_SHORT).show()
+                    return
+                }
+
+                for (vehicleSnapshot in snapshot.children) {
+                    val vehicleId = vehicleSnapshot.key ?: continue
+                    deleteVehicleAndServices(userId, vehicleId, vehicle.registrationNumber)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Toast.makeText(this@HomeActivity, "Failed to find vehicle: ${error.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
+    }
+
+    private fun deleteVehicleAndServices(userId: String, vehicleId: String, registrationNumber: String) {
+        val vehicleRef = database.reference.child("users_vehicles").child(userId).child(vehicleId)
+        val servicesRef = database.reference.child("users_services").child(userId).child(registrationNumber)
+
+        // First delete the entire services node for this vehicle
+        servicesRef.removeValue()
+            .addOnSuccessListener {
+                // After services are deleted, delete the vehicle
+                vehicleRef.removeValue()
+                    .addOnSuccessListener {
+                        Toast.makeText(
+                            this@HomeActivity,
+                            "Vehicle and all service records deleted",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    .addOnFailureListener { e ->
+                        Toast.makeText(
+                            this@HomeActivity,
+                            "Vehicle deleted but services may remain: ${e.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(
+                    this@HomeActivity,
+                    "Failed to delete service records: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
     }
 
     // Fetch username from Firebase Realtime Database
